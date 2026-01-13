@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Validate all environment variables
-if [ -z "$TOKEN" ] || [ -z "$API_BASE" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ] || [ -z "$CA_CERT" ]; then
-    echo "Error: Missing environment variables (TOKEN, API_BASE, DB_USER, DB_PASS, or CA_CERT)."
+if [ -z "$TOKEN" ] || [ -z "$API_BASE" ] || [ -z "$MY_CRDB_USER" ] || [ -z "$MY_CRDB_PASS" ] || [ -z "$CA_CERT" ]; then
+    echo "Error: Missing environment variables (TOKEN, API_BASE, MY_CRDB_USER, MY_CRDB_PASS, or CA_CERT)."
     exit 1
 fi
 
@@ -27,9 +27,9 @@ do
     "config": {
       "type": "Cockroach",
       "scheme": "cockroachdb+psycopg2",
-      "username": "$DB_USER",
+      "username": "$MY_CRDB_USER",
       "authType": {
-        "password": "$DB_PASS"
+        "password": "$MY_CRDB_PASS"
       },
       "hostPort": "host.docker.internal:26257",
       "database": "$db",
@@ -40,7 +40,7 @@ do
       },
       "sslMode": "verify-full",
       "connectionOptions": {
-        "password": "$DB_PASS"
+        "password": "$MY_CRDB_PASS"
       },
       "supportsMetadataExtraction": true,
       "supportsProfiler": true
