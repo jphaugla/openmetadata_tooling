@@ -4,43 +4,32 @@ This repository manages the lifecycle of OpenMetadata using Docker and provides 
 
 ### 🔗 Quick Links (Collate Resources)
 
-* **[Collate Official Documentation](https://www.google.com/search?q=https://docs.getcollate.io/)**
+* **[Collate Official Documentation](https://docs.getcollate.io/)**
 * **[Local Docker Deployment Guide](https://docs.getcollate.io/quick-start/local-docker-deployment)**
-* **[Ingestion Framework Overview](https://www.google.com/search?q=https://docs.getcollate.io/connectors/ingestion)**
-* **[Managing Teams & Roles](https://www.google.com/search?q=https://docs.getcollate.io/main-concepts/metadata-standard/governance/teams-roles)**
-* **[Data Mesh: Domains & Data Products](https://www.google.com/search?q=https://docs.getcollate.io/main-concepts/metadata-standard/governance/domains)**
+* **[Ingestion Framework Overview](https://docs.getcollate.io/deployment/ingestion)**
+* **[Managing Teams & Roles](https://docs.getcollate.io/how-to-guides/admin-guide/teams-and-users/add-users)**
+* **[Data Mesh: Domains & Data Products](https://docs.getcollate.io/how-to-guides/data-governance/domains-&-data-products)**
 
 ---
 
 ## 📑 Table of Contents
 
-1. [Docker Infrastructure (`/docker`)](https://www.google.com/search?q=%23-docker-infrastructure-docker)
-* [Getting Started](https://www.google.com/search?q=%23getting-started)
-* [Docker Script Catalog](https://www.google.com/search?q=%23docker-script-catalog)
-
-
-2. [API Automation Layer (`/api`)](https://www.google.com/search?q=%23-api-automation-layer-api)
-* [Environment Setup](https://www.google.com/search?q=%23environment-setup-required)
-* [API Script Catalog](https://www.google.com/search?q=%23api-script-catalog)
-
-
-3. [CockroachDB Setup](https://www.google.com/search?q=%23-cockroachdb-setup)
-* [Admin User Creation](https://www.google.com/search?q=%23create-cockroachdb-admin-user)
-* [Sample Data (Workloads)](https://www.google.com/search?q=%23create-cockroachdb-databases-using-the-built-in-cockroach-workload)
-
-
-4. [Ingestion Agent Workflow](https://www.google.com/search?q=%23-run-agents)
-5. [Pro-Tips](https://www.google.com/search?q=%23-the-week-one-pro-tip)
+1. [Docker Infrastructure (/docker)](#-docker-infrastructure-)
+2. [API Automation Layer (/api)](#-api-automation-layer-)
+3. [CockroachDB Setup](#-cockroachdb-setup)
+4. [Ingestion Agent Workflow](#-run-agents)
+5. [Pro-Tips](#-the-week-one-pro-tip)
 
 ---
 
-## 🐳 Docker Infrastructure (`/docker`)
+## 🐳 Docker Infrastructure 
+(`/docker`)
 
 Handles the lifecycle of OpenMetadata infrastructure. Includes automation to fetch official configurations and manage containers/volumes.
 
 ### Getting Started
 
-Follow the steps documented in the [Collate Docker Deployment](https://docs.getcollate.io/quick-start/local-docker-deployment) guide:
+Follow the steps documented in the [Collate Docker Deployment](https://www.google.com/search?q=https://docs.getcollate.io/deployment/docker/local-deployment) guide:
 
 1. **Fetch Infrastructure Configs**:
 Before the first run, pull the official Docker Compose files:
@@ -78,7 +67,8 @@ Before the first run, pull the official Docker Compose files:
 
 ---
 
-## 📡 API Automation Layer (`/api`)
+## 📡 API Automation Layer 
+(`/api`)
 
 Automation for managing CockroachDB metadata services within OpenMetadata.
 
