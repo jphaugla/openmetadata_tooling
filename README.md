@@ -1,3 +1,7 @@
+Here is the updated `README.md` including the new **CockroachDB Scripts** section. I’ve placed it right after the Ingestion Framework section to keep the "Script Catalog" flow consistent.
+
+---
+
 # 🚀 OpenMetadata & CockroachDB Automation
 
 This repository manages the lifecycle of OpenMetadata using Docker and provides an automation layer to register CockroachDB services via API.
@@ -7,6 +11,7 @@ This repository manages the lifecycle of OpenMetadata using Docker and provides 
 * **[Collate Official Documentation](https://docs.getcollate.io/)**
 * **[Local Docker Deployment Guide](https://docs.getcollate.io/quick-start/local-docker-deployment)**
 * **[Ingestion Framework Overview](https://docs.getcollate.io/deployment/ingestion)**
+* **[Hybrid Ingestion Runner Docs](https://docs.getcollate.io/getting-started/day-1/hybrid-saas/index#hybrid-ingestion-runner-secure-metadata-workflows-in-your-cloud)** 🆕
 * **[Managing Teams & Roles](https://docs.getcollate.io/how-to-guides/admin-guide/teams-and-users/add-users)**
 * **[Data Mesh: Domains & Data Products](https://docs.getcollate.io/how-to-guides/data-governance/domains-&-data-products)**
 
@@ -14,15 +19,18 @@ This repository manages the lifecycle of OpenMetadata using Docker and provides 
 
 ## 📑 Table of Contents
 
-1. [Docker Infrastructure (/docker)](#-docker-infrastructure-)
-2. [API Automation Layer (/api)](#-api-automation-layer-)
-3. [CockroachDB Setup](#-cockroachdb-setup)
-4. [Ingestion Agent Workflow](#-run-agents)
-5. [Pro-Tips](#-the-week-one-pro-tip)
+1. [Docker Infrastructure (/docker)](https://www.google.com/search?q=%23-docker-infrastructure-)
+2. [API Automation Layer (/api)](https://www.google.com/search?q=%23-api-automation-layer-)
+3. [Ingestion Framework (/ingestionFramework)](https://www.google.com/search?q=%23-ingestion-framework-)
+4. [CockroachDB Scripts (/cockroach_scripts)](https://www.google.com/search?q=%23-cockroachdb-scripts-)
+5. [CockroachDB Setup](https://www.google.com/search?q=%23-cockroachdb-setup)
+6. [Ingestion Agent Workflow](https://www.google.com/search?q=%23-run-agents)
+7. [Pro-Tips](https://www.google.com/search?q=%23-the-week-one-pro-tip)
 
 ---
 
-## 🐳 Docker Infrastructure 
+## 🐳 Docker Infrastructure 
+
 (`/docker`)
 
 Handles the lifecycle of OpenMetadata infrastructure. Includes automation to fetch official configurations and manage containers/volumes.
@@ -33,26 +41,25 @@ Follow the steps documented in the [Collate Docker Deployment](https://www.googl
 
 1. **Fetch Infrastructure Configs**:
 Before the first run, pull the official Docker Compose files:
+
 ```bash
 ./getComposeFiles.sh
 
 ```
 
-
 2. **Start the Stack**:
+
 ```bash
 ./startit.sh
 
 ```
 
-
 3. **Access the UI**:
+
 * **OpenMetadata UI**: [http://localhost:8585](https://www.google.com/search?q=http://localhost:8585)
 *(Creds: `admin@open-metadata.org` / `admin`)*
 * **Airflow UI**: [http://localhost:8080](https://www.google.com/search?q=http://localhost:8080)
 *(Creds: `admin` / `admin`)*
-
-
 
 ### Docker Script Catalog
 
@@ -67,7 +74,8 @@ Before the first run, pull the official Docker Compose files:
 
 ---
 
-## 📡 API Automation Layer 
+## 📡 API Automation Layer 
+
 (`/api`)
 
 Automation for managing CockroachDB metadata services within OpenMetadata.
@@ -77,11 +85,11 @@ Automation for managing CockroachDB metadata services within OpenMetadata.
 Export these variables to your shell:
 
 ```bash
-export TOKEN="your_jwt_token"              # Admin Bot Token
+export TOKEN="your_jwt_token"              # Admin Bot Token
 export API_BASE="http://localhost:8585/api/v1"
-export MY_CRDB_USER="non_root"             # CRDB User with admin permissions
-export MY_CRDB_PASS="********"             # CRDB Password
-export CA_CERT="-----BEGIN..."             # Raw CA Cert text
+export MY_CRDB_USER="non_root"             # CRDB User with admin permissions
+export MY_CRDB_PASS="********"             # CRDB Password
+export CA_CERT="-----BEGIN..."             # Raw CA Cert text
 
 ```
 
@@ -94,6 +102,44 @@ export CA_CERT="-----BEGIN..."             # Raw CA Cert text
 | `delete_service.sh` | **Single** | Surgically removes one service by name. |
 | `checkService.sh` | **Utility** | Validates existence and connection status. |
 | `get_cockroach_db.sh` | **Utility** | Fetches the full JSON definition of a service. |
+
+---
+
+## ⚙️ Ingestion Framework
+
+(`/ingestionFramework`)
+
+This directory contains the tooling required for a **Hybrid SaaS Deployment**.
+
+### Overview: The Hybrid Ingestion Runner
+
+The **Hybrid Ingestion Runner** bridges the gap between your private infrastructure and the Collate Cloud (SaaS). It allows you to securely execute ingestion workflows within your own environment (e.g., local Mac or private cloud) while hosting the metadata server on Collate's cloud. This architecture ensures that sensitive credentials and data access remain within your local boundary; the SaaS platform only triggers the workflows and receives the resulting metadata, without ever touching your secrets.
+
+### Framework File Catalog
+
+| File | Purpose |
+| --- | --- |
+| `install.sh` | **Environment Setup**: Creates a local Python virtual environment (`venv-collate`) and installs the specific OpenMetadata ingestion packages (v1.11.4) required to match the server version. It specifically handles the `cockroach` and `snowflake` extras. |
+| `run_ingest.sh` | **Execution Wrapper**: The command-line trigger for the ingestion process. It invokes the metadata CLI using the configuration defined in the YAML file. |
+| `crdb_ingest_movr.yaml` | **Configuration**: Defines the `source` (Local CockroachDB `movr` database) and `sink` (Collate SaaS API). It includes security settings (`verify-ca` SSL mode), local certificate paths, and filter patterns to only ingest the `public` schema. |
+
+---
+
+## 🪳 CockroachDB Scripts
+
+(`/cockroach_scripts`)
+
+Helper utility scripts to interact with the local secure CockroachDB instance. These wrappers simplify connecting to a secure cluster by automatically handling certificate paths and ports.
+
+### DB Script Catalog
+
+| File | Purpose |
+| --- | --- |
+| `sql.sh` | **Interactive Shell**: Opens a secure SQL terminal session to the local cluster using the configured certificates. |
+| `sql_file.sh` | **File Executor**: Executes a specific `.sql` file against the database. <br>
+
+<br> *Usage:* `./sql_file.sh <filename.sql>`. |
+| `create_crdb_admin.sql` | **Initialization**: A SQL script that creates the admin user (`jhaugland`), grants default database access, and assigns admin privileges. |
 
 ---
 
@@ -149,5 +195,4 @@ First, run `cockroach_db_add.sh` to create the services. For each service (**Coc
 2. **The Infrastructure**: Run `startit.sh` and allow ~2 minutes for search indices and bots to initialize.
 3. **The Automation**: Run `cockroach_db_add.sh`.
 4. **The Handshake**: Services added via API will initially show a status of **Unknown**.
-5. **Add Agents**: Navigate to the **Agents** tab in the UI and add the agents in the correct order
-
+5. **Add Agents**: Navigate to the **Agents** tab in the UI and add the agents in the correct order.

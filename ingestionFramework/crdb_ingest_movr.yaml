@@ -1,0 +1,34 @@
+source:
+  type: cockroach
+  serviceName: mac_local_crdb_final
+  serviceConnection:
+    config:
+      type: Cockroach
+      scheme: cockroachdb+psycopg2
+      username: ${MY_CRDB_USER}
+      authType:
+        password: ${MY_CRDB_PASS}
+      hostPort: localhost:26257
+      database: movr
+      sslMode: verify-ca
+      connectionArguments:
+        sslrootcert: /Users/jasonhaugland/gits/cockroachMacLocal/local_cert/cockroach_cert/certs/ca.crt
+  sourceConfig:
+    config:
+      type: DatabaseMetadata
+      includeViews: true
+      # This filter keeps only the 'public' schema
+      schemaFilterPattern:
+        includes:
+          - public
+sink:
+  type: metadata-rest
+  config: {}
+
+workflowConfig:
+  loggerLevel: INFO
+  openMetadataServerConfig:
+    hostPort: ${API_BASE}
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: ${TOKEN}
