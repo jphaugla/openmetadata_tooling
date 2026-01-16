@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Validate all environment variables
-if [ -z "$TOKEN" ] || [ -z "$API_BASE" ] || [ -z "$MY_CRDB_USER" ] || [ -z "$MY_CRDB_PASS" ] || [ -z "$CA_CERT" ]; then
+if [ -z "$TOKEN" ] || [ -z "$API_BASE" ] || [ -z "$MY_CRDB_USER" ] || [ -z "$MY_CRDB_PASS" ] || [ -z "$CA_CERT" ] || [ -z "$CRDB_HOST_PORT" ]; then
     echo "Error: Missing environment variables (TOKEN, API_BASE, MY_CRDB_USER, MY_CRDB_PASS, or CA_CERT)."
     exit 1
 fi
@@ -31,7 +31,7 @@ do
       "authType": {
         "password": "$MY_CRDB_PASS"
       },
-      "hostPort": "host.docker.internal:26257",
+      "hostPort": "${CRDB_HOST_PORT}",
       "database": "$db",
       "ingestAllDatabases": false,
       "databaseSchema": "public",

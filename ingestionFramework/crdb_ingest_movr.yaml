@@ -28,7 +28,7 @@ sink:
 workflowConfig:
   loggerLevel: INFO
   openMetadataServerConfig:
-    hostPort: ${API_BASE}
+    hostPort: ${API_COLLATE_BASE}
     authProvider: openmetadata
     securityConfig:
       jwtToken: ${TOKEN}

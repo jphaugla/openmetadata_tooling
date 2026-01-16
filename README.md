@@ -86,7 +86,8 @@ Export these variables to your shell:
 
 ```bash
 export TOKEN="your_jwt_token"              # Admin Bot Token
-export API_BASE="http://localhost:8585/api/v1"
+export API_COLLATE_BASE="http://localhost:8585"
+export API_BASE="${API_COLLATE_BASE}/api"
 export MY_CRDB_USER="non_root"             # CRDB User with admin permissions
 export MY_CRDB_PASS="********"             # CRDB Password
 export CA_CERT="-----BEGIN..."             # Raw CA Cert text
