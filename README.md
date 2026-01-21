@@ -107,6 +107,8 @@ export PG_HOST_PORT="host.docker.internal:5432" # postgresql host and port for p
 | `delete_service.sh`      | **Single** | Surgically removes one service by name.                 |
 | `getDBService.sh`        | **Utility** | Validates existence, connection status and exports json. |
 | `importDBService.sh`     | **Utility** | Uses json export from getDBService to import service    |
+| `getPipelines.sh`        | **Utility** | Exports the pipelines associated with a service         |
+| `importPipelines.sh`     | **Utility** | Uses json export from getPipelines to import pipelines    |
 
 ---
 
