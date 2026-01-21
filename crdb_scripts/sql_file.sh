@@ -1,7 +1,7 @@
 export PORT=26257
 export SQL_FILE=$1
 # Validate CERTS_DIR
-if [ -z "$CERTS_DIR" ] || [ -z "$SQL_FILE"]; then
+if [ -z "$CERTS_DIR" ] || [ -z "$SQL_FILE" ]; then
     echo "Error: Missing CERTS_DIR environment variable"
     exit 1
 fi

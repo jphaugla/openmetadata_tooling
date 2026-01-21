@@ -19,13 +19,13 @@ This repository manages the lifecycle of OpenMetadata using Docker and provides 
 
 ## 📑 Table of Contents
 
-1. [Docker Infrastructure (/docker)](https://www.google.com/search?q=%23-docker-infrastructure-)
-2. [API Automation Layer (/api)](https://www.google.com/search?q=%23-api-automation-layer-)
-3. [Ingestion Framework (/ingestionFramework)](https://www.google.com/search?q=%23-ingestion-framework-)
-4. [CockroachDB Scripts (/cockroach_scripts)](https://www.google.com/search?q=%23-cockroachdb-scripts-)
-5. [CockroachDB Setup](https://www.google.com/search?q=%23-cockroachdb-setup)
-6. [Ingestion Agent Workflow](https://www.google.com/search?q=%23-run-agents)
-7. [Pro-Tips](https://www.google.com/search?q=%23-the-week-one-pro-tip)
+1. [Docker Infrastructure (/docker)](#-docker-infrastructure)
+2. [API Automation Layer (/api)](#-api-automation-layer)
+3. [Ingestion Framework (/ingestionFramework)](#-ingestion-framework)
+4. [CockroachDB Scripts (/cockroach_scripts)](#-cockroachdb-scripts)
+5. [CockroachDB Setup](#-cockroachdb-setup)
+6. [Ingestion Agent Workflow](#-run-agents)
+7. [Pro-Tips](#-the-week-one-pro-tip)
 
 ---
 
@@ -63,15 +63,17 @@ Before the first run, pull the official Docker Compose files:
 
 ### Docker Script Catalog
 
-| Script | Purpose |
-| --- | --- |
-| `getComposeFiles.sh` | Downloads latest `docker-compose.yml` and env files. |
-| `startit.sh` | Orchestrates `docker compose up`. |
-| `stopit.sh` | Shuts down containers safely (maintains data). |
-| `clean_docker.sh` | Stops and **removes** containers. |
-| `clean_volumes.sh` | **Factory Reset**: Deletes all volumes (MySQL, Search, Airflow). |
-| `psql.sh` | Helper to open a PostgreSQL terminal for metadata inspection. |
-
+| Script                   | Purpose                                                          |
+|--------------------------|------------------------------------------------------------------|
+| `getComposeFiles.sh`     | Downloads latest `docker-compose.yml` and env files.             |
+| `startit.sh`             | Orchestrates `docker compose up`.                                |
+| `stopit.sh`              | Shuts down containers safely (maintains data).                   |
+| `clean_docker.sh`        | Stops and **removes** containers.                                |
+| `clean_volumes.sh`       | **Factory Reset**: Deletes all volumes (MySQL, Search, Airflow). |
+| `psql.sh`                | Helper to open a PostgreSQL terminal for metadata inspection.    |
+| `psql_file.sh`           | Helper to open run PostgreSQL commands contained in sql file     |
+| `ecomerce_db.sql`        | Create ecommerce sample database                                 |
+| `populate_ecommerce.sql` | Add sample data to ecommerce database                            |
 ---
 
 ## 📡 API Automation Layer 
@@ -91,18 +93,20 @@ export API_BASE="${API_COLLATE_BASE}/api"
 export MY_CRDB_USER="non_root"             # CRDB User with admin permissions
 export MY_CRDB_PASS="********"             # CRDB Password
 export CA_CERT="-----BEGIN..."             # Raw CA Cert text
-
+export YAML_CA_CERT=$(echo "$CA_CERT" | sed 's/^/          /') # needed if doing hybrid runner for yaml
+export CRDB_HOST_PORT="localhost:26257"         # cockroachDB host and port for CockroachDB database service
+export PG_HOST_PORT="host.docker.internal:5432" # postgresql host and port for postgresql database service
 ```
 
 ### API Script Catalog
 
-| Script | Type | Action |
-| --- | --- | --- |
-| `cockroach_db_add.sh` | **Bulk** | Registers 7 standard CockroachDB demo services. |
-| `cockroach_db_delete.sh` | **Bulk** | Hard-deletes the entire suite of services. |
-| `delete_service.sh` | **Single** | Surgically removes one service by name. |
-| `checkService.sh` | **Utility** | Validates existence and connection status. |
-| `get_cockroach_db.sh` | **Utility** | Fetches the full JSON definition of a service. |
+| Script                   | Type | Action                                                  |
+|--------------------------| --- |---------------------------------------------------------|
+| `cockroach_db_add.sh`    | **Bulk** | Registers 7 standard CockroachDB demo services.         |
+| `cockroach_db_delete.sh` | **Bulk** | Hard-deletes the entire suite of services.              |
+| `delete_service.sh`      | **Single** | Surgically removes one service by name.                 |
+| `getDBService.sh`        | **Utility** | Validates existence, connection status and exports json. |
+| `importDBService.sh`     | **Utility** | Uses json export from getDBService to import service    |
 
 ---
 
@@ -134,15 +138,13 @@ Helper utility scripts to interact with the local secure CockroachDB instance. T
 
 ### DB Script Catalog
 
-| File | Purpose |
-| --- | --- |
-| `sql.sh` | **Interactive Shell**: Opens a secure SQL terminal session to the local cluster using the configured certificates. |
-| `sql_file.sh` | **File Executor**: Executes a specific `.sql` file against the database. <br>
-
-<br> *Usage:* `./sql_file.sh <filename.sql>`. |
+| File                    | Purpose                                                                                                                                   |
+|:------------------------|:------------------------------------------------------------------------------------------------------------------------------------------|
+| `sql.sh`                | **Interactive Shell**: Opens a secure SQL terminal session to the local cluster using the configured certificates.                        |
+| `sql_file.sh`           | **File Executor**: Executes a specific `.sql` file against the database.<br><br>*Usage:* `./sql_file.sh <filename.sql>`                   |
 | `create_crdb_admin.sql` | **Initialization**: A SQL script that creates the admin user (`jhaugland`), grants default database access, and assigns admin privileges. |
-
----
+| `movr_fk.sql`           | **Initialization**: A SQL script that adds foreign keys to movr.                                                                          |                                                                        |
+| `movr_fk_drop.sql`      | **Initialization**: A SQL script that drops foreign keys to movr.                                                                         |
 
 ## 🦎 CockroachDB Setup
 
