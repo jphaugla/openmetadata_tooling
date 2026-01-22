@@ -103,12 +103,16 @@ export PG_HOST_PORT="host.docker.internal:5432" # postgresql host and port for p
 | Script                   | Type | Action                                                  |
 |--------------------------| --- |---------------------------------------------------------|
 | `cockroach_db_add.sh`    | **Bulk** | Registers 7 standard CockroachDB demo services.         |
-| `cockroach_db_delete.sh` | **Bulk** | Hard-deletes the entire suite of services.              |
+| `cockroach_db_delete.sh` | **Bulk** | Hard-deletes all cockroachDB services.              |
 | `delete_service.sh`      | **Single** | Surgically removes one service by name.                 |
 | `getDBService.sh`        | **Utility** | Validates existence, connection status and exports json. |
 | `importDBService.sh`     | **Utility** | Uses json export from getDBService to import service    |
 | `getPipelines.sh`        | **Utility** | Exports the pipelines associated with a service         |
+| `deletePipelines.sh`     | **Utility** | Delete pipelines associated with a service            |
 | `importPipelines.sh`     | **Utility** | Uses json export from getPipelines to import pipelines    |
+| `suite_add_cockroach.sh` | **Utility** | Utilizes json file utilities to add CockroachDB services |
+| `suite_delete_cockroach.sh` | **Utility** | Utilizes utilities to delete CockroachDB services |
+| `suite_add_cockroach.sh` | **Utility** | Utilizes json file utilities to add CockroachDB services |
 
 ---
 

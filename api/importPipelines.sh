@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# --- CONFIGURATION ---
+# Set to "true" to automatically deploy/start the pipelines after import.
+# Set to "false" to only create the definitions (Safe Mode).
+RUN_DEPLOYMENT="false"
+# ---------------------
+
 INPUT_FILE=$1
 
 if [ -z "$INPUT_FILE" ] || [ ! -f "$INPUT_FILE" ]; then
@@ -6,46 +13,92 @@ if [ -z "$INPUT_FILE" ] || [ ! -f "$INPUT_FILE" ]; then
     exit 1
 fi
 
-# 1. Get the NEW Service ID from the destination
-# This is required because pipelines are 'owned' by a service ID
-SERVICE_NAME=$(basename "$INPUT_FILE" _pipelines.json)
-echo "🔗 Looking up Destination ID for Service: $SERVICE_NAME"
-
-SERVICE_INFO=$(curl -s -H "Authorization: Bearer $TOKEN" "${API_BASE}/services/databaseServices/name/${SERVICE_NAME}")
-DEST_SERVICE_ID=$(echo "$SERVICE_INFO" | jq -r '.id')
-
-if [ "$DEST_SERVICE_ID" == "null" ]; then
-    echo "❌ Error: Could not find Service '$SERVICE_NAME' on destination. Import the service first!"
+if [ -z "$TOKEN" ] || [ -z "$API_BASE" ] || [ -z "$OWNER_ID" ]; then
+    echo "❌ Error: Missing environment variables (TOKEN, API_BASE, or OWNER_ID)."
     exit 1
 fi
 
-echo "✅ Destination Service ID found: $DEST_SERVICE_ID"
+# 1. Resolve Owner Name and Service ID
+echo "👤 Resolving name for Owner ID: $OWNER_ID..."
+USER_JSON=$(curl -s -H "Authorization: Bearer $TOKEN" "${API_BASE}/users/${OWNER_ID}")
+OWNER_NAME=$(echo "$USER_JSON" | jq -r '.name')
 
-# 2. Iterate and Import
-cat "$INPUT_FILE" | jq -c '.[]' | while read -r pipeline; do
-    P_NAME=$(echo "$pipeline" | jq -r '.name')
+if [ "$OWNER_NAME" == "null" ] || [ -z "$OWNER_NAME" ]; then
+    echo "❌ Error: Could not find user name for ID $OWNER_ID."
+    exit 1
+fi
+
+BASE_URL=$(echo "${API_BASE}" | sed 's#/$##')
+SERVICE_NAME=$(basename "$INPUT_FILE" _pipelines.json)
+
+echo "🔗 Resolving Service ID for ${SERVICE_NAME}..."
+DEST_SVC_ID=$(curl -s -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/databaseServices/name/${SERVICE_NAME}" | jq -r '.id')
+
+if [ "$DEST_SVC_ID" == "null" ]; then
+    echo "❌ Error: Service ${SERVICE_NAME} not found. Import the service first."
+    exit 1
+fi
+
+# 2. Process Pipelines
+cat "$INPUT_FILE" | jq -c '.[]' | while read -r agent; do
+    NAME=$(echo "$agent" | jq -r '.name')
+    P_TYPE=$(echo "$agent" | jq -r '.pipelineType')
     
-    # We rebuild the JSON for 1.11.4: 
-    # We must replace the old service ID with the new one
-    CLEAN_JSON=$(echo "$pipeline" | jq --arg svc_id "$DEST_SERVICE_ID" --arg owner_id "$OWNER_ID" '{
+    # Rebuild the JSON
+    CLEAN_JSON=$(echo "$agent" | jq --arg svc_id "$DEST_SVC_ID" --arg owner_id "$OWNER_ID" --arg owner_name "$OWNER_NAME" --arg p_type "$P_TYPE" '{
         name: .name,
         displayName: .displayName,
         description: .description,
         pipelineType: .pipelineType,
-        sourceConfig: .sourceConfig,
+        sourceConfig: (
+            if $p_type == "metadata" then 
+                (.sourceConfig | .config.ownerConfig = {
+                    default: $owner_name,
+                    service: $owner_name,
+                    database: $owner_name,
+                    enableInheritance: true
+                })
+            else 
+                .sourceConfig 
+            end
+        ),
         airflowConfig: .airflowConfig,
         loggerLevel: .loggerLevel,
-        service: {
-            id: $svc_id,
-            type: "databaseService"
-        },
+        service: {id: $svc_id, type: "databaseService"},
         owners: [{id: $owner_id, type: "user"}]
     }')
 
-    echo "🚀 Importing Pipeline: $P_NAME..."
+    echo "----------------------------------------------------------------"
+    echo "🚀 Step 1: Importing $P_TYPE Agent: $NAME"
     
-    curl -s -X POST "${API_BASE}/services/ingestionPipelines" \
+    CREATE_RESPONSE=$(curl -s -X POST "${BASE_URL}/services/ingestionPipelines" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $TOKEN" \
-        -d "$CLEAN_JSON" | jq -r '"Result: " + .name + " (ID: " + .id + ")"'
+        -d "$CLEAN_JSON")
+        
+    PIPELINE_ID=$(echo "$CREATE_RESPONSE" | jq -r '.id')
+
+    if [ "$PIPELINE_ID" != "null" ] && [ ! -z "$PIPELINE_ID" ]; then
+        echo "   ✅ Created (ID: $PIPELINE_ID)"
+        
+        # 🚀 Step 2: Conditional Deployment
+        if [ "$RUN_DEPLOYMENT" == "true" ]; then
+            echo "   sat 🛰️  Step 2: Deploying to Orchestration..."
+            DEPLOY_RESPONSE=$(curl -s -X POST "${BASE_URL}/services/ingestionPipelines/deploy/${PIPELINE_ID}" \
+                -H "Authorization: Bearer $TOKEN")
+            
+            # 1.11.4 Fix: Check HTTP Code or generic success, don't just rely on ID in return
+            # A deploy command might just return 200 OK with the pipeline status
+            if echo "$DEPLOY_RESPONSE" | grep -q "error"; then
+                 echo "   ⚠️ Deploy failed."
+                 echo "   Message: $(echo "$DEPLOY_RESPONSE" | jq -r '.message')"
+            else
+                 echo "   ✅ Successfully Deployed!"
+            fi
+        else
+            echo "   ⏸️  Skipping Deployment (RUN_DEPLOYMENT=false). Pipeline is created but not active."
+        fi
+    else
+        echo "   ❌ Failed to create: $(echo "$CREATE_RESPONSE" | jq -r '.message')"
+    fi
 done
