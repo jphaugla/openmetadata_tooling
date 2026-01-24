@@ -6,6 +6,11 @@ if [ -z "$SERVICE_NAME" ]; then
     exit 1
 fi
 
+if [[ "$SERVICE_NAME" == *" "* ]]; then
+    echo "❌ Error: Service name '$SERVICE_NAME' contains spaces. Spaces are not allowed."
+    exit 1
+fi
+
 # Sanitize API_BASE
 BASE_URL=$(echo "${API_BASE}" | sed 's#/$##')
 
@@ -15,9 +20,28 @@ echo "🔍 Searching for Ingestion Pipelines tied to: ${SERVICE_NAME}..."
 RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" \
     "${BASE_URL}/services/ingestionPipelines?limit=1000&fields=owners,sourceConfig,airflowConfig")
 
+# Check if curl failed or returned empty
+if [ -z "$RESPONSE" ]; then
+    echo "❌ Error: Empty response from API. Check your TOKEN and API_BASE."
+    exit 1
+fi
+
 # Filter JSON to only include pipelines where the service name matches
 PIPELINES=$(echo "$RESPONSE" | jq --arg svc "$SERVICE_NAME" '.data | map(select(.service.name == $svc))')
-COUNT=$(echo "$PIPELINES" | jq 'length')
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "❌ Error processing JSON with jq."
+    echo "Response Content: $RESPONSE"
+    exit 1
+fi
+
+# Check if PIPELINES is null or empty
+if [ -z "$PIPELINES" ] || [ "$PIPELINES" == "null" ]; then
+    COUNT=0
+else
+    COUNT=$(echo "$PIPELINES" | jq 'length')
+fi
 
 if [ "$COUNT" -eq 0 ]; then
     echo "⚠️ No pipelines found for service: ${SERVICE_NAME}."

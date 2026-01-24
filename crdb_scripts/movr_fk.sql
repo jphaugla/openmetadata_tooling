@@ -14,8 +14,3 @@ FOREIGN KEY (city, vehicle_id) REFERENCES vehicles (city, id);
 ALTER TABLE rides 
 ADD CONSTRAINT fk_rider_ref_users 
 FOREIGN KEY (city, rider_id) REFERENCES users (city, id);
-
--- 4. Vehicle Location Histories to Rides
-ALTER TABLE vehicle_location_histories 
-ADD CONSTRAINT fk_city_ride_ref_rides 
-FOREIGN KEY (city, ride_id) REFERENCES rides (city, id);

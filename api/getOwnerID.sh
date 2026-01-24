@@ -9,6 +9,11 @@ if [ -z "$OWNER_NAME" ]; then
     exit 1
 fi
 
+if [[ "$OWNER_NAME" == *" "* ]]; then
+    echo "❌ Error: Owner name '$OWNER_NAME' contains spaces. Spaces are not allowed."
+    exit 1
+fi
+
 # 2. Validate Environment Variables
 if [ -z "$TOKEN" ] || [ -z "$API_BASE" ]; then
     echo "❌ Error: Missing environment variables (TOKEN or API_BASE)."
@@ -42,7 +47,7 @@ else
     echo "❓ $OWNER_NAME not found via direct name lookup. Checking fallback search..."
     
     # Fallback: Search the users list (useful if name case-sensitivity is an issue)
-    FALLBACK_RESPONSE=$(curl -s -H "Authorization: Bearer $TOKEN" "${BASE_URL}/users?limit=50")
+    FALLBACK_RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/users?limit=50")
     FALLBACK_ID=$(echo "$FALLBACK_RESPONSE" | grep -B 1 "\"name\":\"$OWNER_NAME\"" | grep -o '"id":"[^"]*' | head -n 1 | cut -d'"' -f4)
 
     if [ ! -z "$FALLBACK_ID" ]; then

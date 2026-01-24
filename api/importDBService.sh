@@ -20,14 +20,17 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
+# 2. Clean the JSON and Inject the NEW Owner
+# Sanitize API_BASE to handle trailing slashes
+BASE_URL=$(echo "${API_BASE}" | sed 's#/$##')
+
 echo "🚀 Importing service from: $INPUT_FILE"
 echo "👤 Assigning Owner ID: $OWNER_ID"
 
-# 2. Clean the JSON and Inject the NEW Owner
 # We use jq to rebuild the object:
 # - Taking name, serviceType, description, and connection from the file
 # - Manually creating the owners array using the $OWNER_ID variable
-CLEAN_JSON=$(jq --arg owner_id "$OWNER_ID" '{
+CLEAN_JSON=$(jq -c --arg owner_id "$OWNER_ID" '{
     name: .name,
     serviceType: .serviceType,
     description: .description,
@@ -40,10 +43,25 @@ CLEAN_JSON=$(jq --arg owner_id "$OWNER_ID" '{
     ]
 }' "$INPUT_FILE")
 
-# 3. Execute the Import
-echo "📡 Sending POST request to $API_BASE..."
+# Validate that we got a valid JSON with required fields
+IMPORT_NAME=$(echo "$CLEAN_JSON" | jq -r '.name // empty')
+IMPORT_TYPE=$(echo "$CLEAN_JSON" | jq -r '.serviceType // empty')
 
-RESPONSE=$(curl -s -X POST "$API_BASE/services/databaseServices" \
+if [ -z "$IMPORT_NAME" ] || [ "$IMPORT_NAME" == "null" ] || [ -z "$IMPORT_TYPE" ] || [ "$IMPORT_TYPE" == "null" ]; then
+    echo "❌ Error: Could not extract 'name' or 'serviceType' from $INPUT_FILE."
+    echo "Please check if the JSON file is valid and contains these fields."
+    exit 1
+fi
+
+if [[ "$IMPORT_NAME" == *" "* ]]; then
+    echo "❌ Error: Service name '$IMPORT_NAME' (from JSON) contains spaces. Spaces are not allowed."
+    exit 1
+fi
+
+# 3. Execute the Import
+echo "📡 Sending POST request to $BASE_URL..."
+
+RESPONSE=$(curl -s -L -X POST "${BASE_URL}/services/databaseServices" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $TOKEN" \
     -d "$CLEAN_JSON")

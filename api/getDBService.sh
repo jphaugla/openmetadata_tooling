@@ -5,7 +5,12 @@ SERVICE_NAME=$1
 # 1. Validate Service Name was passed
 if [ -z "$SERVICE_NAME" ]; then
     echo "❌ Error: No Service Name provided."
-    echo "Usage: ./checkService.sh <service_name>"
+    echo "Usage: ./getDBService.sh <service_name>"
+    exit 1
+fi
+
+if [[ "$SERVICE_NAME" == *" "* ]]; then
+    echo "❌ Error: Service name '$SERVICE_NAME' contains spaces. Spaces are not allowed."
     exit 1
 fi
 
@@ -28,6 +33,22 @@ RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" "$CLEAN_URL")
 SERVICE_ID=$(echo "$RESPONSE" | grep -o '"id":"[^"]*' | head -n 1 | cut -d'"' -f4)
 STATUS=$(echo "$RESPONSE" | grep -o '"status":"[^"]*' | head -n 1 | cut -d'"' -f4)
 
+# --- SHARED EXPORT FUNCTION ---
+export_service() {
+    local id=$1
+    local name=$2
+    
+    echo "💾 Exporting JSON definition for ID: ${id}..."
+
+    # We use the SERVICE_ID for the most accurate GET request
+    # Added 'owners' and 'tags' fields so your export is complete
+    curl -s -L -X GET "${BASE_URL}/services/databaseServices/${id}?fields=connection,owners,tags" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" | python3 -m json.tool > "${name}.json"
+    
+    echo "📂 File saved as: ${name}.json"
+}
+
 if [ ! -z "$SERVICE_ID" ]; then
     # If status is empty, it means the connection hasn't been tested yet
     [ -z "$STATUS" ] && STATUS="Unknown (Not Tested)"
@@ -36,27 +57,17 @@ if [ ! -z "$SERVICE_ID" ]; then
     echo "🆔 ID: $SERVICE_ID"
     echo "📡 Status: $STATUS"
 
-    # --- NEW EXPORT LOGIC START ---
-    echo "💾 Exporting JSON definition for ID: ${SERVICE_ID}..."
-    
-    # We use the SERVICE_ID for the most accurate GET request
-    # Added 'owners' and 'tags' fields so your export is complete
-    curl -s -X GET "${BASE_URL}/services/databaseServices/${SERVICE_ID}?fields=connection,owners,tags" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" | python3 -m json.tool > "${SERVICE_NAME}.json"
-    
-    echo "📂 File saved as: ${SERVICE_NAME}.json"
-    # --- NEW EXPORT LOGIC END ---
+    export_service "$SERVICE_ID" "$SERVICE_NAME"
 
 else
     echo "❓ $SERVICE_NAME not found via direct name lookup. Checking fallback list..."
     
     # Fallback: Search the full list
-    FALLBACK_ID=$(curl -s -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/databaseServices" | grep -B 1 "\"name\":\"$SERVICE_NAME\"" | grep -o '"id":"[^"]*' | head -n 1 | cut -d'"' -f4)
+    FALLBACK_ID=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/databaseServices" | grep -B 1 "\"name\":\"$SERVICE_NAME\"" | grep -o '"id":"[^"]*' | head -n 1 | cut -d'"' -f4)
 
     if [ ! -z "$FALLBACK_ID" ]; then
         echo "⚠️ Found via fallback! ID: $FALLBACK_ID"
-        # Optional: You could also trigger the export here if you like
+        export_service "$FALLBACK_ID" "$SERVICE_NAME"
     else
         echo "❌ Really could not find $SERVICE_NAME."
     fi

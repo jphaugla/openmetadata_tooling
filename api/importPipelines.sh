@@ -18,9 +18,12 @@ if [ -z "$TOKEN" ] || [ -z "$API_BASE" ] || [ -z "$OWNER_ID" ]; then
     exit 1
 fi
 
+# 0. Sanitize API_BASE
+BASE_URL=$(echo "${API_BASE}" | sed 's#/$##')
+
 # 1. Resolve Owner Name and Service ID
 echo "👤 Resolving name for Owner ID: $OWNER_ID..."
-USER_JSON=$(curl -s -H "Authorization: Bearer $TOKEN" "${API_BASE}/users/${OWNER_ID}")
+USER_JSON=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/users/${OWNER_ID}")
 OWNER_NAME=$(echo "$USER_JSON" | jq -r '.name')
 
 if [ "$OWNER_NAME" == "null" ] || [ -z "$OWNER_NAME" ]; then
@@ -28,11 +31,15 @@ if [ "$OWNER_NAME" == "null" ] || [ -z "$OWNER_NAME" ]; then
     exit 1
 fi
 
-BASE_URL=$(echo "${API_BASE}" | sed 's#/$##')
 SERVICE_NAME=$(basename "$INPUT_FILE" _pipelines.json)
 
+if [[ "$SERVICE_NAME" == *" "* ]]; then
+    echo "❌ Error: Service name '$SERVICE_NAME' (from filename) contains spaces. Spaces are not allowed."
+    exit 1
+fi
+
 echo "🔗 Resolving Service ID for ${SERVICE_NAME}..."
-DEST_SVC_ID=$(curl -s -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/databaseServices/name/${SERVICE_NAME}" | jq -r '.id')
+DEST_SVC_ID=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/databaseServices/name/${SERVICE_NAME}" | jq -r '.id')
 
 if [ "$DEST_SVC_ID" == "null" ]; then
     echo "❌ Error: Service ${SERVICE_NAME} not found. Import the service first."
@@ -71,7 +78,7 @@ cat "$INPUT_FILE" | jq -c '.[]' | while read -r agent; do
     echo "----------------------------------------------------------------"
     echo "🚀 Step 1: Importing $P_TYPE Agent: $NAME"
     
-    CREATE_RESPONSE=$(curl -s -X POST "${BASE_URL}/services/ingestionPipelines" \
+    CREATE_RESPONSE=$(curl -s -L -X POST "${BASE_URL}/services/ingestionPipelines" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $TOKEN" \
         -d "$CLEAN_JSON")
@@ -84,7 +91,7 @@ cat "$INPUT_FILE" | jq -c '.[]' | while read -r agent; do
         # 🚀 Step 2: Conditional Deployment
         if [ "$RUN_DEPLOYMENT" == "true" ]; then
             echo "   sat 🛰️  Step 2: Deploying to Orchestration..."
-            DEPLOY_RESPONSE=$(curl -s -X POST "${BASE_URL}/services/ingestionPipelines/deploy/${PIPELINE_ID}" \
+            DEPLOY_RESPONSE=$(curl -s -L -X POST "${BASE_URL}/services/ingestionPipelines/deploy/${PIPELINE_ID}" \
                 -H "Authorization: Bearer $TOKEN")
             
             # 1.11.4 Fix: Check HTTP Code or generic success, don't just rely on ID in return

@@ -11,6 +11,10 @@ databases=("intro" "kv" "bank" "movr" "startrek" "tpcc" "ycsb")
 for db in "${databases[@]}"
 do
     SERVICE_NAME="Cockroach_$db"
+    if [[ "$SERVICE_NAME" == *" "* ]]; then
+        echo "❌ Error: Service name '$SERVICE_NAME' contains spaces. Spaces are not allowed."
+        continue
+    fi
     PIPELINE_NAME="${SERVICE_NAME}_metadata"
     
     echo "------------------------------------------"
@@ -27,7 +31,7 @@ do
     CLEAN_URL=$(echo "${API_BASE}/services/databaseServices/name/${SERVICE_NAME}?include=all" | sed 's#//#/#g' | sed 's#http:/#http://#g')
     
     RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" "$CLEAN_URL")
-    SERVICE_ID=$(echo "$RESPONSE" | grep -o '"id":"[^"]*' | grep -o '[^"]*$')
+    SERVICE_ID=$(echo "$RESPONSE" | grep -o '"id":"[^"]*' | grep -o '[^"]*$' | head -n 1)
 
     if [ ! -z "$SERVICE_ID" ]; then
         # 3. Perform the Hard Delete using the UUID

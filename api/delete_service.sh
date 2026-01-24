@@ -8,6 +8,11 @@ if [ -z "$SERVICE_NAME" ]; then
     exit 1
 fi
 
+if [[ "$SERVICE_NAME" == *" "* ]]; then
+    echo "❌ Error: Service name '$SERVICE_NAME' contains spaces. Spaces are not allowed."
+    exit 1
+fi
+
 # 2. Validate Environment
 if [ -z "$TOKEN" ] || [ -z "$API_BASE" ]; then
     echo "❌ Error: Missing environment variables (TOKEN or API_BASE)."
