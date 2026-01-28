@@ -1,8 +1,3 @@
-Here is a significantly enhanced `README.md` file. It converts your existing text into proper Markdown, adds a deep dive into the Kubernetes architecture we just built, documents the `install.sh` logic step-by-step, and provides critical troubleshooting links.
-
-### `README.md`
-
-```markdown
 # OpenMetadata Local Development Setup (Minikube)
 
 This project automates the deployment of **OpenMetadata** and its dependencies (PostgreSQL, OpenSearch, Airflow) onto a local **Minikube** Kubernetes cluster.
