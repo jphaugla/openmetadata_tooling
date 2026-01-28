@@ -39,11 +39,26 @@ if [[ "$SERVICE_NAME" == *" "* ]]; then
 fi
 
 echo "🔗 Resolving Service ID for ${SERVICE_NAME}..."
-DEST_SVC_ID=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/databaseServices/name/${SERVICE_NAME}" | jq -r '.id')
 
-if [ "$DEST_SVC_ID" == "null" ]; then
-    echo "❌ Error: Service ${SERVICE_NAME} not found. Import the service first."
-    exit 1
+# Try Database Service first
+DEST_SVC_RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/databaseServices/name/${SERVICE_NAME}")
+DEST_SVC_ID=$(echo "$DEST_SVC_RESPONSE" | jq -r '.id')
+
+if [ "$DEST_SVC_ID" != "null" ] && [ ! -z "$DEST_SVC_ID" ]; then
+    DEST_SVC_TYPE="databaseService"
+    echo "✅ Found Database Service: ${SERVICE_NAME}"
+else
+    # Try Search Service
+    DEST_SVC_RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/searchServices/name/${SERVICE_NAME}")
+    DEST_SVC_ID=$(echo "$DEST_SVC_RESPONSE" | jq -r '.id')
+    
+    if [ "$DEST_SVC_ID" != "null" ] && [ ! -z "$DEST_SVC_ID" ]; then
+        DEST_SVC_TYPE="searchService"
+        echo "✅ Found Search Service: ${SERVICE_NAME}"
+    else
+        echo "❌ Error: Service ${SERVICE_NAME} not found as a Database or Search service. Import the service first."
+        exit 1
+    fi
 fi
 
 # 2. Process Pipelines
@@ -52,7 +67,7 @@ cat "$INPUT_FILE" | jq -c '.[]' | while read -r agent; do
     P_TYPE=$(echo "$agent" | jq -r '.pipelineType')
     
     # Rebuild the JSON
-    CLEAN_JSON=$(echo "$agent" | jq --arg svc_id "$DEST_SVC_ID" --arg owner_id "$OWNER_ID" --arg owner_name "$OWNER_NAME" --arg p_type "$P_TYPE" '{
+    CLEAN_JSON=$(echo "$agent" | jq --arg svc_id "$DEST_SVC_ID" --arg svc_type "$DEST_SVC_TYPE" --arg owner_id "$OWNER_ID" --arg owner_name "$OWNER_NAME" --arg p_type "$P_TYPE" '{
         name: .name,
         displayName: .displayName,
         description: .description,
@@ -71,7 +86,7 @@ cat "$INPUT_FILE" | jq -c '.[]' | while read -r agent; do
         ),
         airflowConfig: .airflowConfig,
         loggerLevel: .loggerLevel,
-        service: {id: $svc_id, type: "databaseService"},
+        service: {id: $svc_id, type: $svc_type},
         owners: [{id: $owner_id, type: "user"}]
     }')
 

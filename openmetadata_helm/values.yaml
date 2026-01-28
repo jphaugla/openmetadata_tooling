@@ -1,0 +1,30 @@
+# values.yaml
+# OpenMetadata Helm Values
+# Configured for PostgreSQL backend and bundled OpenSearch
+
+openmetadata:
+  config:
+    database:
+      host: openmetadata-postgres
+      port: 5432
+      driverClass: org.postgresql.Driver
+      dbScheme: postgresql
+      databaseName: openmetadata_db
+      auth:
+        username: postgres
+        password:
+          secretRef: postgresql-secrets
+          secretKey: openmetadata-postgresql-password
+    elasticsearch:
+      enabled: true
+      host: opensearch
+      searchType: opensearch
+      port: 9200
+      scheme: http
+    pipelineServiceClientConfig:
+      apiEndpoint: http://openmetadata-dependencies-api-server:8080
+      auth:
+        username: admin
+        password:
+          secretRef: airflow-secrets
+          secretKey: openmetadata-airflow-password

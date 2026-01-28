@@ -1,0 +1,46 @@
+# elasticsearch-values.yaml
+global:
+  security:
+    allowInsecureImages: true
+
+# Official Elasticsearch 8.11.6 configuration
+image:
+  registry: docker.elastic.co
+  repository: elasticsearch/elasticsearch
+  tag: 8.11.4
+
+# Single node setup for development
+master:
+  replicaCount: 1
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "512M"
+    limits:
+      cpu: "1000m"
+      memory: "1024M"
+  
+  # Standard elasticsearch.yml configuration
+  extraEnvs:
+    - name: discovery.type
+      value: "single-node"
+    - name: xpack.security.enabled
+      value: "false"
+    - name: xpack.ml.enabled
+      value: "false"
+
+# Bitnami chart specific overrides for non-root
+primary:
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1000
+    runAsGroup: 0
+    fsGroup: 1000
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1000
+
+sysctlImage:
+  tag: latest

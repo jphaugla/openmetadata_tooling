@@ -2,3 +2,14 @@ docker/docker-volume/
 ingestionFramework/venv-collate/
 api/*.json
 api/json/
+api/.*
+openmetadata_helm/deps.yaml
+# Mac System Files
+.DS_Store
+
+# IDE Settings (Optional, but good practice)
+.idea/
+.vscode/
+
+# Logs and Temp files
+*.log

@@ -14,7 +14,30 @@ fi
 # Sanitize API_BASE
 BASE_URL=$(echo "${API_BASE}" | sed 's#/$##')
 
-echo "🔍 Searching for Ingestion Pipelines tied to: ${SERVICE_NAME}..."
+echo "🔍 Identifying Service Type for: ${SERVICE_NAME}..."
+
+# Try Database Service first
+DB_SVC_RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/databaseServices/name/${SERVICE_NAME}")
+DB_SVC_ID=$(echo "$DB_SVC_RESPONSE" | jq -r '.id')
+
+if [ "$DB_SVC_ID" != "null" ] && [ ! -z "$DB_SVC_ID" ]; then
+    SERVICE_TYPE="databaseService"
+    echo "✅ Found Database Service: ${SERVICE_NAME}"
+else
+    # Try Search Service
+    SEARCH_SVC_RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" "${BASE_URL}/services/searchServices/name/${SERVICE_NAME}")
+    SEARCH_SVC_ID=$(echo "$SEARCH_SVC_RESPONSE" | jq -r '.id')
+    
+    if [ "$SEARCH_SVC_ID" != "null" ] && [ ! -z "$SEARCH_SVC_ID" ]; then
+        SERVICE_TYPE="searchService"
+        echo "✅ Found Search Service: ${SERVICE_NAME}"
+    else
+        echo "❌ Error: Service '${SERVICE_NAME}' not found as a Database or Search service."
+        exit 1
+    fi
+fi
+
+echo "🔍 Searching for Ingestion Pipelines tied to: ${SERVICE_NAME} (${SERVICE_TYPE})..."
 
 # In 1.11.4, we fetch all and use jq to filter to ensure we don't miss any due to API filter quirks
 RESPONSE=$(curl -s -L -H "Authorization: Bearer $TOKEN" \

@@ -113,6 +113,12 @@ export PG_HOST_PORT="host.docker.internal:5432" # postgresql host and port for p
 | `suite_add_cockroach.sh` | **Utility** | Utilizes json file utilities to add CockroachDB services |
 | `suite_delete_cockroach.sh` | **Utility** | Utilizes utilities to delete CockroachDB services |
 | `suite_add_cockroach.sh` | **Utility** | Utilizes json file utilities to add CockroachDB services |
+| `getSearchService.sh`    | **Utility** | Validates status of a Search Service (e.g., Elasticsearch) and exports JSON |
+| `importSearchService.sh` | **Utility** | Imports a Search Service from JSON and assigns a specific Owner ID |
+| `getServiceGlossaryMaps.sh` | **Migration** | Scans a DB or Search service and exports a map of all applied Tags/Glossary terms |
+| `applyServiceGlossaryMaps.sh` | **Migration** | Reads a mapping JSON file and restores Tags/Terms to specific entities/columns |
+| `getGlossary.sh` |**Utility** | Exports a specific Glossary and all its Terms into a single JSON bundle |
+| `importGlossary.sh` |**Utility** | Imports a Glossary and Terms from JSON, handling hierarchy and ownership |
 
 ---
 
