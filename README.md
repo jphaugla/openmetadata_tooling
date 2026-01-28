@@ -20,6 +20,7 @@ This repository manages the lifecycle of OpenMetadata using Docker and provides 
 ## 📑 Table of Contents
 
 1. [Docker Infrastructure (/docker)](#-docker-infrastructure)
+2. [Helm Infrastructure (/openmetadata_helm)](#-openmetadata-helm-infrastructure)
 2. [API Automation Layer (/api)](#-api-automation-layer)
 3. [Ingestion Framework (/ingestionFramework)](#-ingestion-framework)
 4. [CockroachDB Scripts (/cockroach_scripts)](#-cockroachdb-scripts)
@@ -74,6 +75,36 @@ Before the first run, pull the official Docker Compose files:
 | `psql_file.sh`           | Helper to open run PostgreSQL commands contained in sql file     |
 | `ecomerce_db.sql`        | Create ecommerce sample database                                 |
 | `populate_ecommerce.sql` | Add sample data to ecommerce database                            |
+---
+
+## 🐳 Openmetadata Helm Infrastructure 
+
+(`/openmetadata_helm`)
+This project automates the deployment of **OpenMetadata** and its dependencies (PostgreSQL, OpenSearch, Airflow) onto a local **Minikube** Kubernetes cluster.
+### Quick Start
+1.  **Start Minikube** with sufficient resources:
+    ```bash
+    # We recommend allocating 12GB RAM to the VM to prevent OOM Kills
+    minikube start --driver=docker --memory=12288 --cpus=4
+    ```
+
+2.  **Run the Installer:**
+    ```bash
+    chmod +x install.sh
+    ./install.sh
+    ```
+
+3.  **Access the UI:**
+    Once the installation completes, port-forward the OpenMetadata service:
+    ```bash
+    kubectl port-forward service/openmetadata 8585:8585
+    ```
+    * **URL:** [http://localhost:8585](http://localhost:8585)
+    * **User:** `admin`
+    * **Password:** `admin`
+
+More Detail in folder [README.md](openmetadata_helm/README.md)
+
 ---
 
 ## 📡 API Automation Layer 
