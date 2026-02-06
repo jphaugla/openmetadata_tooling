@@ -1,0 +1,32 @@
+#!/bin/bash
+# 1. Nuclear Reset
+rm -rf colat-env
+pyenv local 3.10
+python -m venv colat-env
+source colat-env/bin/activate
+
+# 2. Base Layer
+pip install --upgrade pip
+pip install "pydantic>=2.7.0,<2.12" "typing-extensions>=4.12.2" "python-dotenv==1.0.0"
+
+# 3. The SDK Layer
+# We install this first. It might try to install a generic 'sqllineage'
+pip install "openmetadata-ingestion[db,cockroachdb,profiler,pandas,postgres]==1.11.8"
+
+# 4. THE SURGERY: Force-Inject the Collate Fork
+# We uninstall BOTH potential versions to clear the path
+pip uninstall -y sqllineage collate-sqllineage
+# We install our fork with --no-cache to ensure it writes fresh files
+pip install --no-deps --no-cache-dir "collate-sqllineage==2.0.1"
+
+# 5. Final Utility Layer
+pip install ipykernel==6.29.0 IPython==8.20.0 cachetools>=5.3.0 sqlparse==0.5.3
+
+# 6. Register Kernel
+python -m ipykernel install --user --name=colat-env --display-name "Python (Collate-1.11.8-Heavy)"
+
+# 7. Final Integrity Check
+echo "--- FINAL INTEGRITY CHECK ---"
+python -c "import pydantic; print('✅ Pydantic:', pydantic.__version__)"
+python -c "import sqllineage; print('✅ Lineage Parser: FOUND')"
+python -c "import cachetools; print('✅ Cachetools: FOUND')"

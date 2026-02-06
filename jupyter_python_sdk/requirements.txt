@@ -1,0 +1,18 @@
+# --- Version Anchors for 1.11.7.1 ---
+pydantic>=2.7.0,<2.12
+typing-extensions>=4.12.2
+
+# --- Parsing Engine ---
+sqlparse==0.5.3
+collate-sqllineage==2.0.1
+
+# --- Missing Utilities required by SDK Mixins ---
+cachetools>=5.3.0
+python-dotenv==1.0.0
+
+# --- SDK: Reverted to 1.11.7.1 ---
+openmetadata-ingestion[db,cockroachdb,profiler,classification]==1.11.7.1
+
+# --- Jupyter Demo Tools ---
+ipykernel==6.29.0
+IPython==8.20.0

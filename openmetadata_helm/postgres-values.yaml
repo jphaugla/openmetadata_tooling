@@ -1,0 +1,41 @@
+# postgres-values.yaml
+primary:
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+  extraVolumes:
+    - name: run-postgresql
+      emptyDir: {}
+    - name: collate-data
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: run-postgresql
+      mountPath: /var/run/postgresql
+    - name: collate-data
+      mountPath: /var/lib/postgresql/data
+  persistence:
+    enabled: false
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 60
+    periodSeconds: 20
+    timeoutSeconds: 15
+    failureThreshold: 10
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 15
+    failureThreshold: 10

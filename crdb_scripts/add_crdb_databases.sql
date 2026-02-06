@@ -1,0 +1,10 @@
+create user if not exists jhaugland with login password 'jasonrocks';
+grant all on database movr to jhaugland;
+grant all on database bank to jhaugland;
+grant all on database kv to jhaugland;
+grant all on database intro to jhaugland;
+grant all on database startrek to jhaugland;
+grant all on database tpcc to jhaugland;
+grant all on database ycsb to jhaugland;
+GRANT USAGE ON SCHEMA public TO jhaugland;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO jhaugland;

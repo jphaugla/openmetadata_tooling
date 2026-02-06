@@ -1,0 +1,20 @@
+docker/docker-volume/
+ingestionFramework/venv-collate/
+mcp/om-mcp-workspace/
+jupyter_python_api/colat-env/
+jupyter_python_sdk/colat-env/
+jupyter_data_quality/dq-lean-env/
+api/*.json
+api/json/
+api/.*
+openmetadata_helm/deps.yaml
+*/.ipynb_checkpoints/
+# Mac System Files
+.DS_Store
+
+# IDE Settings (Optional, but good practice)
+.idea/
+.vscode/
+
+# Logs and Temp files
+*.log
