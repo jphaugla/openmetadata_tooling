@@ -16,6 +16,8 @@ The scripts in this directory rely on the following environment variables being 
 *   **`API_BASE`**: The base URL of the OpenMetadata API (e.g., `https://sandbox.open-metadata.org/api/v1`).
 *   **`TOKEN`**: A valid JWT or Bot Token for authentication.
 *   **`OWNER_ID`**: (Required for Imports) The UUID of the user who will own the imported entities.
+*   **`SLEEP_SECONDS`**: (Optional) For `checkServerStatus.sh`, how long to wait between status checks (default: 10).
+*   **`MAX_RETRIES`**: (Optional) For `checkServerStatus.sh`, maximum number of attempts (default: 30).
 
 Ensure these are exported before running any scripts:
 ```bash
@@ -95,6 +97,7 @@ Scripts that run a sequence of operations for specific recurring tasks.
 
 ### Utilities
 *   **`getOwnerID.sh`**: Resolves an Owner Name to an ID.
+*   **`checkServerStatus.sh`**: Monitors the OpenMetadata server until it reports a healthy status. Uses `SLEEP_SECONDS` and `MAX_RETRIES`.
 *   **`list_roles.sh`**: Lists available roles.
 *   **`delete_user_team.sh`**: Deletes a user or team.
 *   **`compare_counts.sh`**: Compares counts of entities (validation).
