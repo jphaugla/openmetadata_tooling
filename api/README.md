@@ -98,6 +98,7 @@ Scripts that run a sequence of operations for specific recurring tasks.
 ### Utilities
 *   **`getOwnerID.sh`**: Resolves an Owner Name to an ID.
 *   **`checkServerStatus.sh`**: Monitors the OpenMetadata server until it reports a healthy status. Uses `SLEEP_SECONDS` and `MAX_RETRIES`.
+*   **`checkCollateStatus.sh`**: Similar to `checkServerStatus.sh` but specifically tuned for Collate SaaS environments, ignoring non-critical migration failures.
 *   **`list_roles.sh`**: Lists available roles.
 *   **`delete_user_team.sh`**: Deletes a user or team.
 *   **`compare_counts.sh`**: Compares counts of entities (validation).
