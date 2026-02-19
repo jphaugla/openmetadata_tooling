@@ -86,6 +86,11 @@ Scripts that run a sequence of operations for specific recurring tasks.
 *   **`deletePipelineService.sh <service_name>`**: Deletes a target Pipeline Service and its pipelines.
 *   **`deleteEntityPipeline.sh <fqn>`**: Deletes a standard pipeline entity (e.g., `Cockroach_to_Postgres_CDC.movr_cdc`) using hard delete.
 *   **`deletePipelines.sh`**: Deletes specific pipelines.
+*   **`getTestCasePipeline.sh <test_case_fqn>`**: Investigates the link between a Data Quality Test Case and its underlying Orchestration.
+    *   **Individual Test Status**: Shows the current status (Passed/Failed/Aborted) and the last successful check time for the specific test case.
+    *   **Health-First Reporting**: Displays a summary of the overall Test Suite health separately from the orchestration logs.
+    *   **Orchestration Details**: Lists associated ingestion pipelines with UI display names, explicit `[ACTIVE]` or `[DELETED]` tags, and human-readable execution times.
+    *   **State Clarity**: Explains that a `failed` pipeline state typically indicates an executor (Arco) infrastructure issue, which may be independent of the actual data health.
 
 ### Glossary & Lineage
 *   **`getGlossary.sh <glossary_name>`**: Exports a Glossary and its terms to `json/<glossary>_glossary.json`.
