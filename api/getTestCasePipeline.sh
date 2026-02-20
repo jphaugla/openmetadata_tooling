@@ -18,6 +18,10 @@ fi
 BASE_URL=$(echo "${API_BASE}" | sed 's#/$##')
 
 echo "🔍 Fetching for the data quality test details: ${TEST_CASE_FQN}..."
+#  can see data quality tests going to Observability->Data Quality->Test Cases
+#  click on name
+#  copy the URL and edit off the https://{{API_BASE}}/test-case
+#  remove test-case-results off end of URL
 
 # URL Encode the FQN (handling spaces and other common special characters)
 ENCODED_FQN=$(echo "$TEST_CASE_FQN" | sed 's/ /%20/g; s/\[/%5B/g; s/\]/%5D/g')
@@ -66,6 +70,7 @@ echo "🆔 Test Suite ID:   ${TEST_SUITE_ID}"
 
 echo ""
 echo "🔍 Fetching health metadata for Test Suite..."
+#  Observability->Data Quality->Test Suites
 
 # Fetch the TestSuite entity directly using its ID ONLY
 URL="${BASE_URL}/dataQuality/testSuites/${TEST_SUITE_ID}?fields=pipelines,testCaseResultSummary"
@@ -98,6 +103,7 @@ echo "================================================"
 
 # --- SECONDARY INFO: Orchestration (How tests are triggered) ---
 PIPELINE_IDS=$(echo "$SUITE_RESPONSE" | jq -r '.pipelines[].id // empty' 2>/dev/null)
+#  Settings->Services->Data Observability->Pipelines
 
 if [ ! -z "$PIPELINE_IDS" ] && [ "$PIPELINE_IDS" != "null" ]; then
     echo ""
