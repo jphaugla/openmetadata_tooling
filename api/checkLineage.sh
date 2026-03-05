@@ -9,4 +9,4 @@ echo "🔍 Fetching Lineage for: ${TABLE_FQN}..."
 
 curl -s -L -X GET "${BASE_URL}/lineage/table/name/${TABLE_FQN}?upstreamDepth=1&downstreamDepth=1" \
      -H "Authorization: Bearer $TOKEN" \
-     -H "Content-Type: application/json" | python3 -m json.tool
+     -H "Content-Type: application/json" | jq .

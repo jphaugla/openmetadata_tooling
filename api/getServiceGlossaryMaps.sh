@@ -1,4 +1,5 @@
 #!/bin/bash
+mkdir -p "${JSON_DIR:-../json}"
 # getServiceGlossaryMaps.sh
 SERVICE_NAME=$1
 
@@ -69,11 +70,11 @@ PROCESSED_JSON=$(echo "$RESPONSE" | jq --arg svc "$SERVICE_NAME" '.data // [] |
     )
 }) | map(select(.tags != [] or (.columnTags | length > 0)))')
 
-echo "$PROCESSED_JSON" > "json/${SERVICE_NAME}_glossary_map.json"
+echo "$PROCESSED_JSON" > "${JSON_DIR:-../json}/${SERVICE_NAME}_glossary_map.json"
 
 echo "✅ Saved mapping to ${SERVICE_NAME}_glossary_map.json"
 COUNT=$(echo "$PROCESSED_JSON" | jq 'length')
 echo "📊 Found $COUNT entities with tags."
 
 # Debug: Show file size
-ls -lh "json/${SERVICE_NAME}_glossary_map.json"
+ls -lh "${JSON_DIR:-../json}/${SERVICE_NAME}_glossary_map.json"

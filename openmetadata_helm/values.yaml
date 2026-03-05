@@ -22,9 +22,10 @@ openmetadata:
       port: 9200
       scheme: http
     pipelineServiceClientConfig:
-      apiEndpoint: http://openmetadata-dependencies-api-server:8080
-      auth:
-        username: admin
-        password:
-          secretRef: airflow-secrets
-          secretKey: openmetadata-airflow-password
+      enabled: true
+      type: "k8s"
+      metadataApiEndpoint: http://openmetadata:8585/api
+      k8s:
+        ingestionImage: docker.getcollate.io/openmetadata/ingestion-base:1.12.1
+        imagePullPolicy: Always
+        useOMJobOperator: false

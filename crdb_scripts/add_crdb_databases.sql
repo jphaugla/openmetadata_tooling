@@ -1,3 +1,5 @@
+SET CLUSTER SETTING server.remote_debugging.mode = 'any';
+grant admin to jhaugland;
 create user if not exists jhaugland with login password 'jasonrocks';
 grant all on database movr to jhaugland;
 grant all on database bank to jhaugland;

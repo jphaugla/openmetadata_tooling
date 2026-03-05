@@ -27,21 +27,31 @@ BASE_URL=$(echo "${API_BASE}" | sed 's#/$##')
 echo "🚀 Importing service from: $INPUT_FILE"
 echo "👤 Assigning Owner ID: $OWNER_ID"
 
-# We use jq to rebuild the object:
+# We use envsubst to allow environment variables in the JSON file
+# then use jq to rebuild the object:
 # - Taking name, serviceType, description, and connection from the file
 # - Manually creating the owners array using the $OWNER_ID variable
-CLEAN_JSON=$(jq -c --arg owner_id "$OWNER_ID" '{
-    name: .name,
-    serviceType: .serviceType,
-    description: .description,
-    connection: .connection,
-    owners: [
-        {
-            id: $owner_id,
-            type: "user"
-        }
-    ]
-}' "$INPUT_FILE")
+TEMPORARY_JSON=$(envsubst < "$INPUT_FILE")
+CLEAN_JSON=$(echo "$TEMPORARY_JSON" | jq -c --arg owner_id "$OWNER_ID" '
+    # Logic to inject CockroachDB session variables if needed
+    if .serviceType == "Cockroach" then
+        .connection.config.connectionOptions += {"options": "-callow_unsafe_internals=true"}
+    else
+        .
+    end |
+    {
+        name: .name,
+        serviceType: .serviceType,
+        description: .description,
+        connection: .connection,
+        owners: [
+            {
+                id: $owner_id,
+                type: "user"
+            }
+        ]
+    }
+')
 
 # Validate that we got a valid JSON with required fields
 IMPORT_NAME=$(echo "$CLEAN_JSON" | jq -r '.name // empty')

@@ -66,6 +66,7 @@ cat "$INPUT_FILE" | jq -c '.[]' | while read -r agent; do
     NAME=$(echo "$agent" | jq -r '.name')
     P_TYPE=$(echo "$agent" | jq -r '.pipelineType')
     
+    
     # Rebuild the JSON and delete the incompatible field
     CLEAN_JSON=$(echo "$agent" | jq --arg svc_id "$DEST_SVC_ID" --arg svc_type "$DEST_SVC_TYPE" --arg owner_id "$OWNER_ID" --arg owner_name "$OWNER_NAME" --arg p_type "$P_TYPE" '
     del(.sourceConfig.config.overrideLineage) | 

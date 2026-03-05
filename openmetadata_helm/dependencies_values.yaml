@@ -68,7 +68,7 @@ opensearch:
 # Airflow configurations for helm dependency
 # you can find more details about this here https://airflow.apache.org/docs/helm-chart/
 airflow:
-  enabled: true
+  enabled: false
   # Static secret key for Airflow webserver (strongly recommended for Airflow 3)
   # Without this, JWT token authentication may fail between Airflow components
   # Generate a new key with: openssl rand -hex 32

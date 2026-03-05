@@ -4,8 +4,9 @@ mcp/om-mcp-workspace/
 jupyter_python_api/colat-env/
 jupyter_python_sdk/colat-env/
 jupyter_data_quality/dq-lean-env/
+python-api/venv/
+python-api/.venv/
 api/*.json
-api/json/
 api/.*
 openmetadata_helm/deps.yaml
 */.ipynb_checkpoints/
@@ -18,3 +19,8 @@ openmetadata_helm/deps.yaml
 
 # Logs and Temp files
 *.log
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo

@@ -8,6 +8,8 @@ fi
 
 databases=("intro" "kv" "bank" "movr" "startrek" "tpcc" "ycsb")
 
+DELETE_COUNT=0
+
 echo "🧹 Starting CockroachDB Suite Cleanup..."
 echo "------------------------------------------"
 
@@ -19,9 +21,16 @@ do
     ./deletePipelines.sh "$SERVICE_NAME"
     
     # 2. Delete the Service
-    ./delete_service.sh "$SERVICE_NAME"
+    # Capture output to check if it was actually deleted
+    OUTPUT=$(./delete_service.sh "$SERVICE_NAME")
+    echo "$OUTPUT"
+    
+    if echo "$OUTPUT" | grep -iq "deleted"; then
+        ((DELETE_COUNT++))
+    fi
     
     echo "------------------------------------------"
 done
 
+echo "TOTAL_DELETED=$DELETE_COUNT"
 echo "✅ Suite cleanup complete."

@@ -32,15 +32,12 @@ kubectl create secret generic postgresql-secrets \
   --from-literal=openmetadata-postgresql-password=password \
   --dry-run=client -o yaml | kubectl apply -f -
 
-kubectl create secret generic airflow-secrets \
-  --from-literal=openmetadata-airflow-password=admin \
-  --dry-run=client -o yaml | kubectl apply -f -
-
 # 3. Pre-load Images (Optional)
 echo "Pre-loading official images..."
-minikube image load docker.getcollate.io/openmetadata/postgresql:1.11.6 2>/dev/null
-minikube image load docker.getcollate.io/openmetadata/ingestion:1.11.6 2>/dev/null
-minikube image load docker.getcollate.io/openmetadata/server:1.11.6 2>/dev/null
+minikube image load docker.getcollate.io/openmetadata/postgresql:1.12.1 2>/dev/null
+minikube image load docker.getcollate.io/openmetadata/ingestion:1.12.1 2>/dev/null
+minikube image load docker.getcollate.io/openmetadata/ingestion-base:1.12.1 2>/dev/null
+minikube image load docker.getcollate.io/openmetadata/server:1.12.1 2>/dev/null
 
 # 4. Install Standalone PostgreSQL
 echo "Installing PostgreSQL..."
@@ -49,9 +46,9 @@ helm upgrade --install openmetadata-postgres bitnami/postgresql \
   --set global.security.allowInsecureImages=true \
   --set image.registry=docker.getcollate.io \
   --set image.repository=openmetadata/postgresql \
-  --set image.tag=1.11.6 \
+  --set image.tag=1.12.1 \
   --set global.postgresql.auth.postgresPassword=password \
-  --set primary.initdb.scripts."init\.sql"="CREATE DATABASE openmetadata_db; CREATE DATABASE airflow_db;" \
+  --set primary.initdb.scripts."init\.sql"="CREATE DATABASE openmetadata_db;" \
   --set primary.persistence.enabled=false \
   --set fullnameOverride=openmetadata-postgres
 
@@ -69,24 +66,14 @@ global:
 mysql:
   enabled: false
 airflow:
-  postgresql:
-    enabled: false
-  data:
-    metadataConnection:
-      protocol: postgresql
-      host: openmetadata-postgres
-      port: 5432
-      db: airflow_db
-      user: postgres
-      pass: password
-  images:
-    airflow:
-      repository: docker.getcollate.io/openmetadata/ingestion
-      tag: 1.11.6
+  enabled: false
 opensearch:
   fullnameOverride: "opensearch"
   replicas: 1
   singleNode: true
+  
+  persistence:
+    enabled: false
   
   # INCREASED MEMORY TO PREVENT CRASHLOOPBACKOFF
   resources:
@@ -94,27 +81,27 @@ opensearch:
       memory: "1024Mi"
       cpu: "500m"
     limits:
-      memory: "2560Mi"
-      cpu: "2000m"
+      memory: "2048Mi"
+      cpu: "1000m"
 
-  # INCREASED TIMEOUTS FOR MINIKUBE
+  # FASTER PROBES FOR RAM DISK
   startupProbe:
     tcpSocket:
       port: 9200
-    initialDelaySeconds: 200
-    periodSeconds: 30
+    initialDelaySeconds: 10
+    periodSeconds: 10
     failureThreshold: 30
   livenessProbe:
     tcpSocket:
       port: 9200
-    initialDelaySeconds: 200
-    periodSeconds: 30
+    initialDelaySeconds: 30
+    periodSeconds: 10
     failureThreshold: 10
   readinessProbe:
     tcpSocket:
       port: 9200
-    initialDelaySeconds: 200
-    periodSeconds: 30
+    initialDelaySeconds: 30
+    periodSeconds: 10
     failureThreshold: 10
     
   # Config with Security Disabled
@@ -134,15 +121,35 @@ helm upgrade --install openmetadata-dependencies open-metadata/openmetadata-depe
   -f "$DIR/deps.yaml"
 
 # 7. Critical Wait Step
-echo "Waiting for OpenSearch to be healthy..."
-sleep 30
+echo "Waiting for OpenSearch API to be responsive..."
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=opensearch --timeout=300s
+
+# Now wait for the actual API to return a healthy cluster status
+MAX_RETRIES=20
+COUNT=0
+until kubectl exec opensearch-0 -- curl -s "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s" >/dev/null 2>&1; do
+  echo "OpenSearch cluster manager not discovered yet (attempt $((++COUNT))/$MAX_RETRIES)..."
+  if [ $COUNT -ge $MAX_RETRIES ]; then
+    echo "❌ Timeout waiting for OpenSearch API."
+    exit 1
+  fi
+  sleep 5
+done
+echo "✅ OpenSearch API is healthy."
 
 # 7.5. Runtime Fix for Replicas
 echo "Applying replica fix to OpenSearch..."
-kubectl exec -it opensearch-0 -- curl -X PUT "http://localhost:9200/_all/_settings" \
-  -H 'Content-Type: application/json' \
-  -d '{"index.number_of_replicas": 0}' 2>/dev/null || echo "Replica fix warning (non-fatal)"
+for i in {1..5}; do
+  RESPONSE=$(kubectl exec opensearch-0 -- curl -s -X PUT "http://localhost:9200/_all/_settings" \
+    -H 'Content-Type: application/json' \
+    -d '{"index.number_of_replicas": 0}')
+  if echo "$RESPONSE" | grep -q "acknowledged"; then
+    echo "✅ Replicas set to 0."
+    break
+  fi
+  echo "⚠️ Replica fix failed, retrying in 5s... ($RESPONSE)"
+  sleep 5
+done
 
 # 8. Install OpenMetadata Core (With 4GB Memory Fix)
 echo "Installing OpenMetadata core..."
@@ -154,7 +161,7 @@ helm upgrade --install openmetadata open-metadata/openmetadata \
   --set resources.limits.cpu="2000m" \
   --set livenessProbe.initialDelaySeconds=180 \
   --set readinessProbe.initialDelaySeconds=180 \
-  --wait --rollback-on-failure --timeout 10m0s
+  --wait --timeout 30m0s
 
 echo "Installation complete. Checking pod status..."
 kubectl get pods

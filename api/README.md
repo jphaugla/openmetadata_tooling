@@ -2,7 +2,7 @@
 
 This directory contains utility scripts for interacting with the OpenMetadata API. These scripts are used for exporting, importing, and managing metadata entities such as Database Services, Pipelines, and Glossaries.
 
-The JSON definitions used and produced by these scripts are stored in the `json/` subdirectory.
+The JSON definitions used and produced by these scripts are stored in the directory specified by the `JSON_DIR` environment variable (defaults to `../json/`). For security, it is recommended to keep this directory outside of your git repository.
 
 ## Link to API Documentation
 
@@ -18,12 +18,15 @@ The scripts in this directory rely on the following environment variables being 
 *   **`OWNER_ID`**: (Required for Imports) The UUID of the user who will own the imported entities.
 *   **`SLEEP_SECONDS`**: (Optional) For `checkServerStatus.sh`, how long to wait between status checks (default: 10).
 *   **`MAX_RETRIES`**: (Optional) For `checkServerStatus.sh`, maximum number of attempts (default: 30).
+*   **`JSON_DIR`**: (Highly Recommended) Path to the directory where JSON files are stored (e.g., `~/.collate/json/`).
 
 Ensure these are exported before running any scripts:
 ```bash
 export API_BASE="https://source.open-metadata.org/api/v1"
 export TOKEN="<source_token>"
 export OWNER_ID="<owner_uuid>"
+export JSON_DIR="~/.collate/json/"
+mkdir -p "$JSON_DIR"
 ```
 
 ## Migration Workflow Example
@@ -55,10 +58,10 @@ export TOKEN="<target_token>"
 export OWNER_ID="<target_owner_uuid>" # Owner on the target system
 
 # Import Service
-./importDBService.sh "json/RedshiftProd.json"
+./importDBService.sh "$JSON_DIR/RedshiftProd.json"
 
 # Import Pipelines
-./importPipelines.sh "json/RedshiftProd_pipelines.json"
+./importPipelines.sh "$JSON_DIR/RedshiftProd_pipelines.json"
 ```
 
 ## Scripts Description
@@ -67,6 +70,8 @@ export OWNER_ID="<target_owner_uuid>" # Owner on the target system
 Scripts that run a sequence of operations for specific recurring tasks.
 *   **`suite_get_cockroach.sh`**: Exports multiple CockroachDB services and their pipelines.
 *   **`suite_add_cockroach.sh`**: Imports the suite of CockroachDB services and pipelines using the JSON files in `json/`.
+*   **`suite_deploy_pipelines_cockroach.sh`**: Triggers deployment for all ingestion pipelines associated with the CockroachDB suite.
+*   **`suite_run_pipelines_cockroach.sh`**: Sequentially runs the full ingestion process (Metadata first, then others) for the entire CockroachDB suite.
 *   **`suite_delete_cockroach.sh`**: Deletes the CockroachDB services defined in the suite.
 
 ### Service Management (Database & Search)
@@ -102,6 +107,7 @@ Scripts that run a sequence of operations for specific recurring tasks.
 
 ### Utilities
 *   **`getOwnerID.sh`**: Resolves an Owner Name to an ID.
+*   **`listUsers.sh`**: Lists all users with their names, display names, and IDs for easy lookup.
 *   **`checkServerStatus.sh`**: Monitors the OpenMetadata server until it reports a healthy status. Uses `SLEEP_SECONDS` and `MAX_RETRIES`.
 *   **`checkCollateStatus.sh`**: Similar to `checkServerStatus.sh` but specifically tuned for Collate SaaS environments, ignoring non-critical migration failures.
 *   **`list_roles.sh`**: Lists available roles.

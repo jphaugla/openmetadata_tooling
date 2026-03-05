@@ -80,9 +80,8 @@ openmetadata:
       minIdleTime: 1 minute
     pipelineServiceClientConfig:
       enabled: true
-      className: "org.openmetadata.service.clients.pipeline.airflow.AirflowRESTClient"
-      # endpoint url for airflow (updated for Apache Airflow chart compatibility)
-      apiEndpoint: http://openmetadata-dependencies-api-server:8080
+      type: "k8s"
+      apiEndpoint: http://openmetadata:8585
       # this will be the api endpoint url of OpenMetadata Server
       metadataApiEndpoint: http://openmetadata:8585/api
       # possible values are "no-ssl", "ignore", "validate"
@@ -91,18 +90,10 @@ openmetadata:
       ingestionIpInfoEnabled: false
       # healthCheckInterval in seconds
       healthCheckInterval: 300
-      # local path in Airflow Pod
-      sslCertificatePath: "/no/path"
-      auth:
-        enabled: true
-        username: admin
-        password:
-          secretRef: airflow-secrets
-          secretKey: openmetadata-airflow-password
-        trustStorePath: ""
-        trustStorePassword:
-          secretRef: ""
-          secretKey: ""
+      k8s:
+        ingestionImage: docker.getcollate.io/openmetadata/ingestion-base:1.12.1
+        imagePullPolicy: Always
+        useOMJobOperator: false
     authorizer:
       enabled: true
       className: "org.openmetadata.service.security.DefaultAuthorizer"

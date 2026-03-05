@@ -19,7 +19,8 @@ primary:
     - name: run-postgresql
       emptyDir: {}
     - name: collate-data
-      emptyDir: {}
+      emptyDir:
+        medium: Memory
   extraVolumeMounts:
     - name: run-postgresql
       mountPath: /var/run/postgresql
