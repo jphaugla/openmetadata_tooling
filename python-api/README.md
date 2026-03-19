@@ -2,7 +2,9 @@
 
 This directory contains Python scripts for interacting with the OpenMetadata API. These scripts are the Python equivalents of the tools found in the `../api/` (Bash) directory, providing the same functionality with better handling of service names with spaces, robust JSON parsing, and cleaner error handling — all without needing `jq`.
 
-JSON definitions used and produced by these scripts are stored in the directory specified by the `JSON_DIR` environment variable (defaults to `../json/`). For security, it is recommended to keep this directory outside of your git repository.
+JSON definitions used and produced by these scripts are stored in the directory specified by the `JSON_DIR` environment variable (defaults to `../json/`). For organization, files are sorted into subdirectories: `databaseService`, `searchService`, `pipelines`, `glossary`, and `glossaryMap`.
+
+For security, it is recommended to keep this directory outside of your git repository.
 
 ## API Documentation
 
@@ -60,11 +62,11 @@ export API_BASE="https://source.open-metadata.org/api/v1"
 export TOKEN="<source_token>"
 
 # Export Service Definition
-# Output: ../json/RedshiftProd.json
+# Output: ../json/databaseService/RedshiftProd.json
 python get_db_service.py "RedshiftProd"
 
 # Export Pipelines
-# Output: ../json/RedshiftProd_pipelines.json
+# Output: ../json/pipelines/RedshiftProd_pipelines.json
 python get_pipelines.py "RedshiftProd"
 ```
 
@@ -74,8 +76,8 @@ export API_BASE="https://target.open-metadata.org/api/v1"
 export TOKEN="<target_token>"
 export OWNER_ID="<target_owner_uuid>"
 
-python import_db_service.py "$JSON_DIR/RedshiftProd.json"
-python import_pipelines.py "$JSON_DIR/RedshiftProd_pipelines.json"
+python import_db_service.py "$JSON_DIR/databaseService/RedshiftProd.json"
+python import_pipelines.py "$JSON_DIR/pipelines/RedshiftProd_pipelines.json"
 ```
 
 ## Scripts Description
@@ -97,6 +99,20 @@ Scripts that orchestrate a full sequence of operations for the CockroachDB suite
 | `suite_delete_cockroach.py` | Deletes all CockroachDB services and pipelines |
 | `suite_fix_crdb_privileges.py` | Applies `allow_unsafe_internals=true` to all CockroachDB connections |
 | `suite_update_host_port_cockroach.py <host:port>` | Updates `hostPort` for all CockroachDB services |
+
+---
+
+### Bulk Operations
+Scripts that loop through subdirectories in `$JSON_DIR` and import all files.
+
+| Script | Subdirectory | Import Script Used |
+|---|---|---|
+| `import_all_database_services.py` | `databaseService/` | `import_db_service.py` |
+| `import_all_glossaries.py` | `glossary/` | `import_glossary.py` |
+| `import_all_glossary_maps.py` | `glossaryMap/` | `apply_service_glossary_maps.py` |
+| `import_all_pipelines.py` | `pipelines/` | `import_pipelines.py` |
+| `deploy_all_pipelines.py` | `pipelines/` | N/A (Bulk Deploy) |
+| `import_all_search_services.py` | `searchService/` | `import_search_service.py` |
 
 ---
 
@@ -139,6 +155,25 @@ Scripts that orchestrate a full sequence of operations for the CockroachDB suite
 | `apply_service_glossary_maps.py <file.json>` | Applies tag mappings back to entities on a target instance |
 | `add_er_lineage.py` | Adds ER lineage edges between CockroachDB movr tables |
 | `check_lineage.py [table_fqn]` | Fetches upstream/downstream lineage for a table (default: `movr.rides`) |
+
+---
+
+### Data Quality
+Scripts for exporting and managing Data Quality tests. To improve efficiency, DQ tests are automatically organized into subdirectories based on their associated service.
+
+| Script | Description |
+|---|---|
+| `get_dq_tests.py [service]` | Exports Test Suites and Test Cases to `../json/dataQuality/<service>/`. If no service is name provided, exports all. |
+| `import_dq_tests.py [suites\|cases\|all] [service]` | Imports Test Suites and Cases from JSON in bulk or for a specific service subdirectory. |
+
+> [!TIP]
+> **Filtering by Service:**
+> Both scripts now support an optional `service_name` argument. If provided, the scripts will only process tests associated with that specific service.
+> - `python3 get_dq_tests.py "BigqueryProd"`
+> - `python3 import_dq_tests.py all "redshift prod"`
+
+> [!NOTE]
+> `get_dq_tests.py` uses the Search API to identify test IDs and then fetches each individually. This ensures it doesn't crash on "orphaned" entities (tests tied to deleted tables) and simply skips them.
 
 ---
 

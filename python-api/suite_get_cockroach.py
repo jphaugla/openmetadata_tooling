@@ -26,7 +26,9 @@ def main():
         encoded_name = urllib.parse.quote(service_name)
         svc_resp = client._make_request("GET", f"/services/databaseServices/name/{encoded_name}")
         if svc_resp and svc_resp.status_code == 200:
-            file_path = os.path.join(json_dir, f"{service_name}.json")
+            svc_dir = os.path.join(json_dir, "databaseService")
+            os.makedirs(svc_dir, exist_ok=True)
+            file_path = os.path.join(svc_dir, f"{service_name}.json")
             with open(file_path, "w") as f:
                 json.dump(svc_resp.json(), f, indent=2)
             print(f"   ✅ Service saved to {file_path}")
@@ -36,7 +38,9 @@ def main():
         # 2. Export Pipelines
         pipelines = client.get_pipelines_for_service(service_name)
         if pipelines:
-            file_path = os.path.join(json_dir, f"{service_name}_pipelines.json")
+            p_dir = os.path.join(json_dir, "pipelines")
+            os.makedirs(p_dir, exist_ok=True)
+            file_path = os.path.join(p_dir, f"{service_name}_pipelines.json")
             with open(file_path, "w") as f:
                 json.dump(pipelines, f, indent=2)
             print(f"   ✅ {len(pipelines)} pipeline(s) saved to {file_path}")

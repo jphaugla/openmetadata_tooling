@@ -89,7 +89,7 @@ def main():
             })
             
     # 4. Save
-    json_dir = os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json"))
+    json_dir = os.path.join(os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json")), "glossaryMap")
     os.makedirs(json_dir, exist_ok=True)
     
     file_name = f"{service_name.replace(' ', '_')}_glossary_map.json"

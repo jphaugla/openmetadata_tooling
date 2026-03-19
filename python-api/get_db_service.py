@@ -23,7 +23,7 @@ def main():
     response = client._make_request("GET", f"/services/databaseServices/name/{encoded_name}")
     
     if response and response.status_code == 200:
-        json_dir = os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json"))
+        json_dir = os.path.join(os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json")), "databaseService")
         os.makedirs(json_dir, exist_ok=True)
         
         file_path = os.path.join(json_dir, f"{service_name}.json")

@@ -63,7 +63,7 @@ def main():
         print(f"Processing Service: {service_name}")
         
         # 2. Import Service Definition
-        svc_file = os.path.join(json_dir, f"{service_name}.json")
+        svc_file = os.path.join(json_dir, "databaseService", f"{service_name}.json")
         if os.path.isfile(svc_file):
             with open(svc_file, "r") as f:
                 svc_data = json.load(f)
@@ -74,6 +74,26 @@ def main():
                 "connection": svc_data.get("connection"),
                 "owners": [{"id": owner_id, "type": "user"}]
             }
+
+            # Sanitize connection config
+            conn_config = create_payload.get("connection", {}).get("config", {})
+            if isinstance(conn_config, dict):
+                aws_config = conn_config.get("awsConfig")
+                if isinstance(aws_config, dict) and "enabled" in aws_config:
+                    del aws_config["enabled"]
+                keys_to_remove = [k for k in conn_config.keys() if k.startswith("supports")]
+                for k in keys_to_remove:
+                    del conn_config[k]
+
+            # Inject CockroachDB specific workaround
+            if create_payload["serviceType"] == "Cockroach":
+                conn_config = create_payload.get("connection", {}).get("config", {})
+                # Correctly nest the options inside connectionOptions as per OpenMetadata schema
+                conn_opts = conn_config.get("connectionOptions")
+                if not isinstance(conn_opts, dict):
+                    conn_opts = {}
+                conn_opts["options"] = "-callow_unsafe_internals=true"
+                conn_config["connectionOptions"] = conn_opts
             resp = client._make_request("POST", "/services/databaseServices", json=create_payload)
             if resp and resp.status_code in [200, 201]:
                 print(f"   ✅ Service imported (ID: {resp.json().get('id')})")
@@ -83,7 +103,7 @@ def main():
             print(f"   ⚠️ {svc_file} not found. Skipping service import.")
             
         # 3. Import Pipelines
-        pipelines_file = os.path.join(json_dir, f"{service_name}_pipelines.json")
+        pipelines_file = os.path.join(json_dir, "pipelines", f"{service_name}_pipelines.json")
         if os.path.isfile(pipelines_file):
             with open(pipelines_file, "r") as f:
                 pipelines_data = json.load(f)

@@ -1,5 +1,5 @@
 #!/bin/bash
-mkdir -p "${JSON_DIR:-../json}"
+mkdir -p "${JSON_DIR:-../json}/glossary"
 
 GLOSSARY_NAME=$1
 
@@ -49,6 +49,6 @@ jq -n --argjson glossary "$RESPONSE" --argjson terms "$TERMS_DATA" \
 '{
     glossary: $glossary,
     terms: $terms
-}' > "${JSON_DIR:-../json}/$FILE_NAME"
+}' > "${JSON_DIR:-../json}/glossary/$FILE_NAME"
 
 echo "✨ Done! Exported to $FILE_NAME"

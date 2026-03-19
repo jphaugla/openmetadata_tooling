@@ -1,5 +1,5 @@
 #!/bin/bash
-mkdir -p "${JSON_DIR:-../json}"
+mkdir -p "${JSON_DIR:-../json}/databaseService"
 
 SERVICE_NAME=$1
 
@@ -45,9 +45,9 @@ export_service() {
     # Added 'owners' and 'tags' fields so your export is complete
     curl -s -L -X GET "${BASE_URL}/services/databaseServices/${id}?fields=connection,owners,tags" \
     -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" | jq . > "${JSON_DIR:-../json}/${name}.json"
+    -H "Content-Type: application/json" | jq . > "${JSON_DIR:-../json}/databaseService/${name}.json"
     
-    echo "📂 File saved as: ${name}.json"
+    echo "📂 File saved as: databaseService/${name}.json"
 }
 
 if [ ! -z "$SERVICE_ID" ]; then

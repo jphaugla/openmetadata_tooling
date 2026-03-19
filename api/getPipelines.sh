@@ -1,5 +1,5 @@
 #!/bin/bash
-mkdir -p "${JSON_DIR:-../json}"
+mkdir -p "${JSON_DIR:-../json}/pipelines"
 SERVICE_NAME=$1
 
 if [ -z "$SERVICE_NAME" ]; then
@@ -72,6 +72,6 @@ if [ "$COUNT" -eq 0 ]; then
     echo "DEBUG: Checked $(echo "$RESPONSE" | jq '.data | length') total pipelines in the instance."
 else
     echo "✅ Found $COUNT pipelines (Metadata, Usage, Profiler, etc.)."
-    echo "$PIPELINES" > "${JSON_DIR:-../json}/${SERVICE_NAME}_pipelines.json"
-    echo "💾 Saved to ${SERVICE_NAME}_pipelines.json"
+    echo "$PIPELINES" > "${JSON_DIR:-../json}/pipelines/${SERVICE_NAME}_pipelines.json"
+    echo "💾 Saved to pipelines/${SERVICE_NAME}_pipelines.json"
 fi

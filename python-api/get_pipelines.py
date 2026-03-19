@@ -32,7 +32,7 @@ def main():
     else:
         print(f"✅ Found {count} pipelines (Metadata, Profiler, etc.).")
         
-        json_dir = os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json"))
+        json_dir = os.path.join(os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json")), "pipelines")
         os.makedirs(json_dir, exist_ok=True)
         
         file_path = os.path.join(json_dir, f"{service_name}_pipelines.json")

@@ -7,7 +7,7 @@ from om_client import OpenMetadataClient
 def main():
     if len(sys.argv) != 2:
         print("❌ Usage: python import_search_service.py <service_json_file_path>")
-        print("Example: python import_search_service.py $JSON_DIR/ElasticsearchProd.json")
+        print("Example: python import_search_service.py $JSON_DIR/searchService/ElasticsearchProd.json")
         sys.exit(1)
 
     input_file = sys.argv[1]

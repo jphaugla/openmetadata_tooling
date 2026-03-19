@@ -1,5 +1,6 @@
 #!/bin/bash
-mkdir -p "${JSON_DIR:-../json}"
+mkdir -p "${JSON_DIR:-../json}/databaseService"
+mkdir -p "${JSON_DIR:-../json}/pipelines"
 
 # Validate environment variables
 if [ -z "$TOKEN" ] || [ -z "$API_BASE" ] || [ -z "$OWNER_ID" ]; then
@@ -63,15 +64,15 @@ do
     echo "Processing Service: $SERVICE_NAME"
     
     # Import Service Definition
-    if [ -f "${JSON_DIR:-../json}/${SERVICE_NAME}.json" ]; then
-        ./importDBService.sh "${JSON_DIR:-../json}/${SERVICE_NAME}.json"
+    if [ -f "${JSON_DIR:-../json}/databaseService/${SERVICE_NAME}.json" ]; then
+        ./importDBService.sh "${JSON_DIR:-../json}/databaseService/${SERVICE_NAME}.json"
     else
         echo "⚠️  Warning: ${SERVICE_NAME}.json not found. Skipping service import."
     fi
 
     # Import Pipelines
-    if [ -f "${JSON_DIR:-../json}/${SERVICE_NAME}_pipelines.json" ]; then
-        ./importPipelines.sh "${JSON_DIR:-../json}/${SERVICE_NAME}_pipelines.json"
+    if [ -f "${JSON_DIR:-../json}/pipelines/${SERVICE_NAME}_pipelines.json" ]; then
+        ./importPipelines.sh "${JSON_DIR:-../json}/pipelines/${SERVICE_NAME}_pipelines.json"
     else
         echo "⚠️  Warning: ${SERVICE_NAME}_pipelines.json not found. Skipping pipeline import."
     fi

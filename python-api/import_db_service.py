@@ -7,7 +7,7 @@ from om_client import OpenMetadataClient
 def main():
     if len(sys.argv) != 2:
         print("❌ Usage: python import_db_service.py <service_json_file_path>")
-        print("Example: python import_db_service.py $JSON_DIR/Cockroach_tpcc.json")
+        print("Example: python import_db_service.py $JSON_DIR/databaseService/Cockroach_tpcc.json")
         sys.exit(1)
 
     input_file = sys.argv[1]
@@ -57,12 +57,29 @@ def main():
     if "description" in service_data:
         create_payload["description"] = service_data["description"]
 
+    # Sanitize connection config (remove unsupported/internal fields)
+    conn_config = create_payload.get("connection", {}).get("config", {})
+    if isinstance(conn_config, dict):
+        # 1. Handle awsConfig
+        aws_config = conn_config.get("awsConfig")
+        if isinstance(aws_config, dict) and "enabled" in aws_config:
+            del aws_config["enabled"]
+            
+        # 2. Remove "supportsX" fields
+        keys_to_remove = [k for k in conn_config.keys() if k.startswith("supports")]
+        for k in keys_to_remove:
+            del conn_config[k]
+
     # Inject CockroachDB specific workaround (from previous fix)
     if service_type == "Cockroach":
         conn_config = create_payload.get("connection", {}).get("config", {})
-        conn_config["options"] = "-c allow_unsafe_internals=true"
-        # Optional: remove the old invalid flag if it happens to be in the JSON
-        conn_config.pop("connectionOptions", None)
+        # Correctly nest the options inside connectionOptions as per OpenMetadata schema
+        # We merge with existing options if they exist
+        conn_opts = conn_config.get("connectionOptions")
+        if not isinstance(conn_opts, dict):
+            conn_opts = {}
+        conn_opts["options"] = "-callow_unsafe_internals=true"
+        conn_config["connectionOptions"] = conn_opts
 
     print("----------------------------------------------------------------")
     print(f"🚀 Importing Service: {name}")

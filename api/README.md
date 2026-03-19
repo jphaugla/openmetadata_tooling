@@ -2,7 +2,9 @@
 
 This directory contains utility scripts for interacting with the OpenMetadata API. These scripts are used for exporting, importing, and managing metadata entities such as Database Services, Pipelines, and Glossaries.
 
-The JSON definitions used and produced by these scripts are stored in the directory specified by the `JSON_DIR` environment variable (defaults to `../json/`). For security, it is recommended to keep this directory outside of your git repository.
+The JSON definitions used and produced by these scripts are stored in the directory specified by the `JSON_DIR` environment variable (defaults to `../json/`). For organization, files are sorted into subdirectories: `databaseService`, `searchService`, `pipelines`, `glossary`, and `glossaryMap`. 
+
+For security, it is recommended to keep this directory outside of your git repository.
 
 ## Link to API Documentation
 
@@ -42,11 +44,11 @@ export TOKEN="<source_token>"
 
 # Export Service Definition
 ./getDBService.sh "RedshiftProd"
-# Output: json/RedshiftProd.json
+# Output: json/databaseService/RedshiftProd.json
 
 # Export Pipelines (Ingestion)
 ./getPipelines.sh "RedshiftProd"
-# Output: json/RedshiftProd_pipelines.json
+# Output: json/pipelines/RedshiftProd_pipelines.json
 ```
 
 ### 2. Import to Target
@@ -58,10 +60,10 @@ export TOKEN="<target_token>"
 export OWNER_ID="<target_owner_uuid>" # Owner on the target system
 
 # Import Service
-./importDBService.sh "$JSON_DIR/RedshiftProd.json"
+./importDBService.sh "$JSON_DIR/databaseService/RedshiftProd.json"
 
 # Import Pipelines
-./importPipelines.sh "$JSON_DIR/RedshiftProd_pipelines.json"
+./importPipelines.sh "$JSON_DIR/pipelines/RedshiftProd_pipelines.json"
 ```
 
 ## Scripts Description

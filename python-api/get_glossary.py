@@ -43,7 +43,7 @@ def main():
         safe_name = glossary_name.replace(" ", "_")
         file_name = f"{safe_name}_glossary.json"
         
-        json_dir = os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json"))
+        json_dir = os.path.join(os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json")), "glossary")
         os.makedirs(json_dir, exist_ok=True)
         file_path = os.path.join(json_dir, file_name)
         
