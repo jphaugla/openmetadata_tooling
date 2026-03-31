@@ -21,12 +21,18 @@ This repository manages the lifecycle of OpenMetadata using Docker and provides 
 
 1. [Docker Infrastructure (/docker)](#-docker-infrastructure)
 2. [Helm Infrastructure (/openmetadata_helm)](#-openmetadata-helm-infrastructure)
-2. [API Automation Layer (/api)](#-api-automation-layer)
-3. [Ingestion Framework (/ingestionFramework)](#-ingestion-framework)
-4. [CockroachDB Scripts (/cockroach_scripts)](#-cockroachdb-scripts)
-5. [CockroachDB Setup](#-cockroachdb-setup)
-6. [Ingestion Agent Workflow](#-run-agents)
-7. [Pro-Tips](#-the-week-one-pro-tip)
+3. [API Automation Layer (/api)](#-api-automation-layer)
+4. [Python API Directory (/python-api)](#-python-api-directory)
+5. [Ingestion Framework (/ingestionFramework)](#-ingestion-framework)
+6. [Jupyter Python API (/jupyter_python_api)](#-jupyter-python-api)
+7. [Jupyter Python SDK (/jupyter_python_sdk)](#-jupyter-python-sdk)
+8. [Jupyter Data Quality (/jupyter_data_quality)](#-jupyter-data-quality)
+9. [OpenMetadata MCP (/mcp)](#-openmetadata-mcp)
+10. [AI SDK Examples (/ai_sdk)](#-ai-sdk-examples)
+11. [CockroachDB Scripts (/crdb_scripts)](#-cockroachdb-scripts)
+12. [CockroachDB Setup](#-cockroachdb-setup)
+13. [Ingestion Agent Workflow](#-run-agents)
+14. [Pro-Tips](#-the-week-one-pro-tip)
 
 ---
 
@@ -152,6 +158,15 @@ more detail in [api folder README.md](api/README.md)
 | `getGlossary.sh` |**Utility** | Exports a specific Glossary and all its Terms into a single JSON bundle |
 | `importGlossary.sh` |**Utility** | Imports a Glossary and Terms from JSON, handling hierarchy and ownership |
 
+
+---
+
+## 🐍 Python API Directory
+
+(`/python-api`)
+
+Python scripts for interacting with the OpenMetadata API (REST logic). These scripts are equivalents of tools found in the `/api` directory but equipped with better handling for names with spaces, robust JSON parsing, and cleaner error handling without using `jq`. More details in the [python-api/README.md](python-api/README.md).
+
 ---
 
 ## ⚙️ Ingestion Framework
@@ -174,9 +189,51 @@ The **Hybrid Ingestion Runner** bridges the gap between your private infrastruct
 
 ---
 
+---
+
+## 📓 Jupyter Python API
+
+(`/jupyter_python_api`)
+
+Contains a Jupyter notebook and supporting scripts for interacting directly with the **OpenMetadata API** using Python's `requests` library. Great for understanding the underlying API structure and performing lightweight queries. More details in [jupyter_python_api/README.md](jupyter_python_api/README.md).
+
+---
+
+## 📓 Jupyter Python SDK
+
+(`/jupyter_python_sdk`)
+
+Demonstrates advanced usage of the **OpenMetadata Python SDK** with a focus on CockroachDB integration. Contains workflows for Programmatic Lineage relationship management and advanced Metadata Discovery operations. More details in [jupyter_python_sdk/README.md](jupyter_python_sdk/README.md).
+
+---
+
+## 📓 Jupyter Data Quality
+
+(`/jupyter_data_quality`)
+
+Jupyter notebooks and scripts designed to demonstrate **Data Quality (DQ)** capabilities. Explores End-to-End Ingestion profiling and Shift-Left Validation using Pandas DataFrame checks. More details in [jupyter_data_quality/README.md](jupyter_data_quality/README.md).
+
+---
+
+## 🤖 OpenMetadata MCP
+
+(`/mcp`)
+
+Tooling to integrate OpenMetadata with AI clients (like Gemini CLI and Claude Desktop) using the **Model Context Protocol (MCP)**. This lets AI interact automatically with your metadata and metrics context. More details in [mcp/README.md](mcp/README.md).
+
+---
+
+## 🧠 AI SDK Examples
+
+(`/ai_sdk`)
+
+Python implementation of the OpenMetadata AI SDK demonstrating how to interact directly with Collate Agents (like the DataQualityPlannerAgent) synchronously or via real-time streaming. More details in [ai_sdk/README.md](ai_sdk/README.md).
+
+---
+
 ## 🪳 CockroachDB Scripts
 
-(`/cockroach_scripts`)
+(`/crdb_scripts`)
 
 Helper utility scripts to interact with the local secure CockroachDB instance. These wrappers simplify connecting to a secure cluster by automatically handling certificate paths and ports.
 

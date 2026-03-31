@@ -68,6 +68,10 @@ python get_db_service.py "RedshiftProd"
 # Export Pipelines
 # Output: ../json/pipelines/RedshiftProd_pipelines.json
 python get_pipelines.py "RedshiftProd"
+
+# Export Lineage
+# Output: ../json/lineage/RedshiftProd_lineage.json
+python export_lineage.py "RedshiftProd"
 ```
 
 ### 2. Import to Target
@@ -78,6 +82,7 @@ export OWNER_ID="<target_owner_uuid>"
 
 python import_db_service.py "$JSON_DIR/databaseService/RedshiftProd.json"
 python import_pipelines.py "$JSON_DIR/pipelines/RedshiftProd_pipelines.json"
+python import_lineage.py "RedshiftProd"
 ```
 
 ## Scripts Description
@@ -145,7 +150,18 @@ Scripts that loop through subdirectories in `$JSON_DIR` and import all files.
 
 ---
 
-### Glossary & Lineage
+### Lineage Management
+
+| Script | Description |
+|---|---|
+| `export_lineage.py <service_name>` | Exports all lineage edges for a database service (based on FQNs) |
+| `import_lineage.py <service_name|file.json>` | Imports lineage edges from JSON, resolving FQNs to IDs |
+| `add_er_lineage.py` | Adds ER lineage edges between CockroachDB movr tables |
+| `check_lineage.py [table_fqn]` | Fetches upstream/downstream lineage for a table (default: `movr.rides`) |
+
+---
+
+### Glossary Management
 
 | Script | Description |
 |---|---|
@@ -153,8 +169,6 @@ Scripts that loop through subdirectories in `$JSON_DIR` and import all files.
 | `import_glossary.py <file.json>` | Imports a Glossary and all its terms (sorted by hierarchy depth) |
 | `get_service_glossary_maps.py <service_name>` | Exports tag mappings for a service to `../json/<service>_glossary_map.json` |
 | `apply_service_glossary_maps.py <file.json>` | Applies tag mappings back to entities on a target instance |
-| `add_er_lineage.py` | Adds ER lineage edges between CockroachDB movr tables |
-| `check_lineage.py [table_fqn]` | Fetches upstream/downstream lineage for a table (default: `movr.rides`) |
 
 ---
 

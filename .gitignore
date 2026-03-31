@@ -1,11 +1,12 @@
 docker/docker-volume/
-ingestionFramework/venv-collate/
 mcp/om-mcp-workspace/
+# Virtual Environments
+**/venv/
+**/.venv/
+ingestionFramework/venv-collate/
 jupyter_python_api/colat-env/
 jupyter_python_sdk/colat-env/
 jupyter_data_quality/dq-lean-env/
-python-api/venv/
-python-api/.venv/
 api/*.json
 api/.*
 openmetadata_helm/deps.yaml

@@ -1,75 +1,165 @@
 # OpenMetadata MCP Tooling
 
-This directory contains the Model Context Protocol (MCP) client and tooling to integrate OpenMetadata with Google Gemini. It allows the Gemini LLM to query your local OpenMetadata instance to answer questions about your data assets (tables, lineage, etc.).
+This directory contains all tooling to integrate **OpenMetadata** with AI clients using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). It supports three clients:
+
+| Client | Method | Transport |
+| :--- | :--- | :--- |
+| **Gemini CLI** | `gemini_cli.sh` via `mcp-remote` (Node) | stdio → HTTP |
+| **Claude Desktop** | `server.py` Python bridge | stdio → HTTP |
+| **Antigravity** | `server.py` Python bridge | stdio → HTTP |
+
+All clients ultimately connect to the same OpenMetadata MCP HTTP endpoint, using your token from `~/.collate/setEnv.sh`.
+
+---
 
 ## Prerequisites
 
 ### Environment Variables
-The following environment variables are required. They are typically sourced from `~/.openmetadata/setEnv.sh` by the `exec.sh` script.
+Set in `~/.collate/setEnv.sh` and sourced automatically by `gemini_cli.sh`:
 
-| Variable | Description | Example |
-| :--- | :--- | :--- |
-| `TOKEN` | OpenMetadata JWT/PAT for Authentication | `eyJ...` |
-| `API_BASE` | OpenMetadata API Base URL | `http://localhost:8585/api/v1` |
-| `GEMINI_APIKEY` | Google Gemini API Key | `AIza...` |
+| Variable | Description |
+| :--- | :--- |
+| `TOKEN` | OpenMetadata JWT/PAT for Authentication |
+| `API_BASE` | OpenMetadata API Base URL (e.g. `https://your-openmetadata-url.com/api/v1`) |
+| `GEMINI_APIKEY` | Google Gemini API Key (for Gemini CLI) |
 
 ### System Dependencies
-- **Python 3.10+** (Recommended)
-- **Node.js/Npx** (Required if running server via npx, though this setup mostly connects to a running server)
-- **OpenMetadata Server**: Must be running (e.g., via Docker/Minikube) at `http://localhost:8585` (or configured via variables).
+- **Node.js / npx** — required for Gemini CLI setup (`mcp-remote`)
+- **Python 3.10+** — required for the Python bridge (`server.py`)
 
-## Installation
+---
 
-1.  **Run the install script**:
-    This script creates a virtual environment `om-mcp-workspace/venv` and installs required packages (`mcp`, `google-genai`, `jupyterlab`).
-    ```bash
-    ./install.sh
-    ```
+## Setup
 
-## Usage
+### For Gemini CLI (uses `mcp-remote`)
 
-1.  **Start the Jupyter Environment**:
-    Use the provided execution script. It handles loading the environment variables and launching Jupyter Lab.
-    ```bash
-    ./exec.sh
-    ```
+No separate install needed — `npx` handles it automatically. Just run:
 
-2.  **Open the Notebook**:
-    Navigate to `mcp_om.ipynb` in the Jupyter interface.
+```bash
+chmod +x gemini_cli.sh
+./gemini_cli.sh
+```
 
-3.  **Run the Cells**:
-    Execute the cells to:
-    -   Connect to the OpenMetadata MCP Server (Default: `http://localhost:8585/mcp`).
-    -   Fetch available tools (e.g., `list_tables`, `get_table_schema`).
-    -   Ask questions to Gemini (e.g., "What tables are in the movr database?").
+This script:
+1. Sources your environment from `~/.collate/setEnv.sh`
+2. Derives the MCP URL from `$API_BASE`
+3. Registers the OpenMetadata server in `~/.gemini/settings.json`
 
-## Code Overview: `mcp_om.ipynb`
+Verify the connection:
+```bash
+gemini mcp list
+# ✓ OpenMetadata: ... (stdio) - Connected
+```
 
-The notebook demonstrates a manual integration of the MCP client with the Gemini Python SDK.
+### For Claude Desktop & Antigravity (uses `server.py`)
 
-### Key Components
+Run the setup script once to create the Python virtual environment:
 
-1.  **Stateless HTTP Client**:
-    The OpenMetadata server uses a stateless HTTP transport for MCP (POST calls), rather than a persistent connection like SSE or stdio. We use `streamable_http_client` to handle this.
-    ```python
-    from mcp.client.streamable_http import streamable_http_client
-    # ...
-    async with streamable_http_client(url=MCP_URL, http_client=http_client) as (read, write, _):
-    ```
+```bash
+chmod +x setup.sh
+./setup.sh
+```
 
-2.  **Tool Fetching**:
-    We explicitly fetch the list of available tools from the MCP server.
-    ```python
-    result = await session.list_tools()
-    ```
+This creates `venv/` in this directory and installs `mcp` and `httpx`.
 
-3.  **Tool conversion**:
-    Gemini requires tools to be defined in a specific format (`FunctionDeclaration`). We iterate through the MCP tools and convert their schema to be compatible with Gemini.
+---
 
-4.  **Execution Loop**:
-    The standard Gemini `generate_content` call doesn't automatically execute client-side tools. The notebook implements a loop:
-    -   **Send Prompt**: Ask Gemini the question, providing the available tools.
-    -   **Catch Function Call**: If Gemini returns a `function_call` (e.g., `list_tables`), we pause.
-    -   **Execute Tool**: We run the tool against the MCP session (`session.call_tool(...)`).
-    -   **Return Result**: We feed the tool's output back to Gemini.
-    -   **Repeat**: This continues until Gemini produces a final text response.
+## Client Configuration
+
+### Gemini CLI
+
+Managed automatically by `gemini_cli.sh`. Settings are stored in `~/.gemini/settings.json`.
+
+The MCP server entry looks like this (auto-generated):
+```json
+{
+  "mcpServers": {
+    "OpenMetadata": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://your-openmetadata-url.com/mcp",
+        "--auth-server-url=https://your-openmetadata-url.com/mcp",
+        "--client-id=OpenMetadata",
+        "--verbose", "--clean",
+        "--header", "Authorization: Bearer YOUR_TOKEN_HERE"
+      ]
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "openmetadata-mcp-bridge": {
+      "command": "/Users/jasonhaugland/gits/openmetadata_tooling/mcp/venv/bin/python3",
+      "args": [
+        "/Users/jasonhaugland/gits/openmetadata_tooling/mcp/server.py"
+      ],
+      "env": {
+        "TOKEN": "YOUR_TOKEN_HERE",
+        "API_BASE": "https://your-openmetadata-url.com/api/v1"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop after updating the config.
+
+### Antigravity
+
+Add to `~/.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "openmetadata-mcp-bridge": {
+      "command": "/Users/jasonhaugland/gits/openmetadata_tooling/mcp/venv/bin/python3",
+      "args": [
+        "/Users/jasonhaugland/gits/openmetadata_tooling/mcp/server.py"
+      ],
+      "env": {
+        "TOKEN": "YOUR_TOKEN_HERE",
+        "API_BASE": "https://your-openmetadata-url.com/api/v1"
+      }
+    }
+  }
+}
+```
+
+---
+
+## File Reference
+
+| File | Purpose |
+| :--- | :--- |
+| `gemini_cli.sh` | Registers the MCP server with the Gemini CLI using `mcp-remote` |
+| `server.py` | Python bridge — proxies stdio MCP ↔ OpenMetadata HTTP endpoint |
+| `setup.sh` | Creates `venv/` and installs Python dependencies for `server.py` |
+| `mcp_om.ipynb` | Jupyter notebook demonstrating manual MCP + Gemini Python SDK integration |
+| `install.sh` | Sets up the Jupyter environment in `om-mcp-workspace/` |
+| `exec.sh` | Launches Jupyter Lab with environment variables loaded |
+
+---
+
+## How the Python Bridge Works (`server.py`)
+
+OpenMetadata uses a stateless HTTP transport for MCP (POST calls), but clients like Claude Desktop and Antigravity expect a `stdio` JSON-RPC interface. `server.py` bridges this gap:
+
+- **Receives**: `stdio` JSON-RPC messages from the client
+- **Forwards**: Requests to the OpenMetadata MCP HTTP endpoint with Bearer auth
+- **Returns**: Tool lists and results back over `stdio`
+
+```python
+# Key pattern used in server.py
+async with streamable_http_client(url=MCP_URL, http_client=http_client) as (read, write, _):
+    async with ClientSession(read, write) as session:
+        await session.initialize()
+        result = await session.list_tools()
+```
