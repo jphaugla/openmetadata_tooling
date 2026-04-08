@@ -25,11 +25,13 @@ class OpenMetadataClient:
     def _make_request(self, method: str, endpoint: str, **kwargs) -> Optional[requests.Response]:
         """Generic request handler with detailed error reporting."""
         url = f"{self.api_base}{endpoint}"
+        
+        # Added a default 30s timeout to prevent hangs
+        if 'timeout' not in kwargs:
+            kwargs['timeout'] = 30
+            
+        print(f"DEBUG: [{method}] {url}")
         try:
-            # Added a default 30s timeout to prevent hangs
-            if 'timeout' not in kwargs:
-                kwargs['timeout'] = 30
-                
             response = requests.request(method, url, headers=self.headers, **kwargs)
             return response
         except Exception as e:
@@ -50,12 +52,12 @@ class OpenMetadataClient:
         encoded_name = urllib.parse.quote(service_name)
         
         # 1. Check Database Services
-        response = self._make_request("GET", f"/services/databaseServices/name/{encoded_name}")
+        response = self._make_request("GET", f"/services/databaseServices/name/{encoded_name}?include=all")
         if response is not None and response.status_code == 200:
             return response.json().get("id"), "databaseService"
             
         # 2. Check Search Services
-        response = self._make_request("GET", f"/services/searchServices/name/{encoded_name}")
+        response = self._make_request("GET", f"/services/searchServices/name/{encoded_name}?include=all")
         if response is not None and response.status_code == 200:
             return response.json().get("id"), "searchService"
             

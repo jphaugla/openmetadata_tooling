@@ -20,7 +20,10 @@ def main():
     print(f"🔍 Fetching Database Service: {service_name}...")
     
     # We use _make_request directly here because we want the full payload to save
-    response = client._make_request("GET", f"/services/databaseServices/name/{encoded_name}")
+    # Adding include=all ensures we find it even if it's soft-deleted
+    # Adding fields=connection,owners,tags ensures the dump is complete
+    url = f"/services/databaseServices/name/{encoded_name}?fields=connection,owners,tags&include=all"
+    response = client._make_request("GET", url)
     
     if response and response.status_code == 200:
         json_dir = os.path.join(os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json")), "databaseService")

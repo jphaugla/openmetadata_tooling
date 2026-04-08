@@ -3,7 +3,13 @@ mcp/om-mcp-workspace/
 # Virtual Environments
 **/venv/
 **/.venv/
+snowflake/venv/
 ingestionFramework/venv-collate/
+
+# Snowflake Keys
+*.p8
+*.p12
+*.pem
 jupyter_python_api/colat-env/
 jupyter_python_sdk/colat-env/
 jupyter_data_quality/dq-lean-env/
