@@ -11,15 +11,7 @@ USE DATABASE CUSTOMERS;
 USE SCHEMA COLLATE_SE;
 
 -- ============================================================
--- 2. CLEAR RAW TABLES
--- ============================================================
-TRUNCATE TABLE RAW_CUSTOMERS;
-TRUNCATE TABLE RAW_ORDERS;
-TRUNCATE TABLE RAW_ORDER_ITEMS;
-TRUNCATE TABLE RAW_PRODUCTS;
-
--- ============================================================
--- 3. LOAD RAW DATA FROM S3  (creates lineage in Collate)
+-- 3. LOAD RAW DATA FROM S3
 -- ============================================================
 
 -- RAW_CUSTOMERS
@@ -53,20 +45,7 @@ ON_ERROR = 'CONTINUE';
 -- CUSTOMERS: Full load in one shot for perfect column-level lineage
 TRUNCATE TABLE CUSTOMERS;
 INSERT INTO CUSTOMERS (
-    CUSTOMER_ID, FIRST_NAME, LAST_NAME, FULL_NAME, PRIORITY_SCORE,
-    FIRST_ORDER, MOST_RECENT_ORDER, NUMBER_OF_ORDERS, 
-    CUSTOMER_LIFETIME_VALUE, LAST_UPDATE_AT
-)
-WITH order_aggs AS (
-    SELECT
-        o.CUSTOMER_ID,
-        MIN(o.ORDER_DATE)           AS FIRST_ORDER,
-        MAX(o.ORDER_DATE)           AS MOST_RECENT_ORDER,
-        COUNT(DISTINCT o.ORDER_ID)  AS NUMBER_OF_ORDERS,
-        SUM(oi.TOTAL_AMOUNT)        AS CUSTOMER_LIFETIME_VALUE
-    FROM ORDERS o
-    LEFT JOIN ORDER_ITEMS oi ON o.ORDER_ID = oi.ORDER_ID
-    GROUP BY o.CUSTOMER_ID
+    CUSTOMER_ID, FIRST_NAME, LAST_NAME, FULL_NAME, PRIORITY_SCORE
 )
 SELECT 
     rc.ID AS CUSTOMER_ID,
@@ -77,14 +56,8 @@ SELECT
         WHEN rc.ID < 1000 AND rc.FIRST_NAME IS NOT NULL AND rc.LAST_NAME IS NOT NULL THEN 'High Priority'
         WHEN rc.FIRST_NAME IS NOT NULL AND rc.LAST_NAME IS NOT NULL THEN 'Standard'
         ELSE 'Incomplete Profile'
-    END AS PRIORITY_SCORE,
-    oa.FIRST_ORDER,
-    oa.MOST_RECENT_ORDER,
-    COALESCE(oa.NUMBER_OF_ORDERS, 0)      AS NUMBER_OF_ORDERS,
-    COALESCE(oa.CUSTOMER_LIFETIME_VALUE, 0) AS CUSTOMER_LIFETIME_VALUE,
-    CURRENT_TIMESTAMP()                     AS LAST_UPDATE_AT
-FROM RAW_CUSTOMERS rc
-LEFT JOIN order_aggs oa ON rc.ID = oa.CUSTOMER_ID;
+    END AS PRIORITY_SCORE
+FROM RAW_CUSTOMERS rc;
 
 -- ORDERS: from RAW_ORDERS (updated details below)
 TRUNCATE TABLE ORDERS;

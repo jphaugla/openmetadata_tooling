@@ -30,9 +30,27 @@ This repository manages the lifecycle of OpenMetadata using Docker and provides 
 9. [OpenMetadata MCP (/mcp)](#-openmetadata-mcp)
 10. [AI SDK Examples (/ai_sdk)](#-ai-sdk-examples)
 11. [CockroachDB Scripts (/crdb_scripts)](#-cockroachdb-scripts)
-12. [CockroachDB Setup](#-cockroachdb-setup)
-13. [Ingestion Agent Workflow](#-run-agents)
-14. [Pro-Tips](#-the-week-one-pro-tip)
+14. [dbt Orchestration (/dbt)](#-dbt-orchestration)
+15. [Ingestion Agent Workflow](#-run-agents)
+16. [Pro-Tips](#-the-week-one-pro-tip)
+
+---
+
+## 🏗️ dbt Orchestration
+(`/dbt`)
+
+This project uses dbt (data build tool) to manage the transformation layer in Snowflake. It replaces the legacy `run_queries.py` script.
+
+### Why dbt?
+- **Automatic Lineage**: Collate reads the dbt `manifest.json` to draw perfect data flow diagrams.
+- **Iceberg Management**: Table materialization as Iceberg is handled via simple config blocks.
+- **Testing**: Built-in data quality checks.
+
+### Running dbt
+```bash
+cd dbt
+dbt run
+```
 
 ---
 

@@ -1,214 +1,107 @@
 # Python API Directory
 
-This directory contains Python scripts for interacting with the OpenMetadata API. These scripts are the Python equivalents of the tools found in the `../api/` (Bash) directory, providing the same functionality with better handling of service names with spaces, robust JSON parsing, and cleaner error handling — all without needing `jq`.
+This directory contains Python scripts for interacting with the OpenMetadata API. These scripts provide a robust way to automate catalog operations, migrate metadata, and manage ingestion pipelines.
 
-JSON definitions used and produced by these scripts are stored in the directory specified by the `JSON_DIR` environment variable (defaults to `../json/`). For organization, files are sorted into subdirectories: `databaseService`, `searchService`, `pipelines`, `glossary`, and `glossaryMap`.
+## 📁 Directory Structure
 
-For security, it is recommended to keep this directory outside of your git repository.
+*   **/ (Main Directory)**: General-purpose utility scripts. These are designed to be reusable across different environments and services (usually by taking arguments).
+*   **[examples/](file:///Users/jasonhaugland/gits/openmetadata_tooling/python-api/examples/)**: One-off, demo-specific, or hardcoded scripts. Use these as templates for your own custom automation.
 
-## API Documentation
-
-*   [OpenMetadata API Documentation](https://docs.open-metadata.org/v1.6.x/main-concepts/metadata-standard/apis) - Official API reference.
-*   [OpenMetadata Schemas](https://github.com/open-metadata/OpenMetadata/tree/main/openmetadata-spec/src/main/resources/json/schema) - JSON Schemas for metadata entities.
-
-## Prerequisites
+## 🚀 Prerequisites
 
 This directory uses **pyenv** for Python version management and a **virtual environment** for dependencies.
 
 **1. Set up Python Version:**
 ```bash
-# Ensure you have the version installed
-pyenv install 3.11.14
 # pyenv will automatically select the version from .python-version
+pyenv install 3.11.14
 ```
 
 **2. Create and Activate Virtual Environment:**
 ```bash
 python -m venv venv
 source venv/bin/activate
-```
-
-**3. Install Dependencies:**
-```bash
 pip install -r requirements.txt
 ```
 
-All scripts read the following environment variables:
+### Environment Variables
+All scripts require the following environment variables (set them via `source ~/.collate/setJson.sh` or manual export):
 
 | Variable | Required | Description |
 |---|---|---|
-| `API_BASE` | ✅ | Base URL of the OpenMetadata API (e.g., `http://localhost:8585/api/v1`) |
-| `TOKEN` | ✅ | A valid JWT or Bot Token for authentication |
-| `OWNER_ID` | Import Scripts Only | UUID of the user who will own the imported entities |
-| `SLEEP_SECONDS` | Optional | For status check scripts, interval between checks (default: 10) |
-| `MAX_RETRIES` | Optional | For status check scripts, maximum number of attempts (default: 30) |
-| `JSON_DIR` | Highly Recommended | Path to storage directory (e.g., `~/.collate/json/`) |
+| `API_BASE` | ✅ | Base URL (e.g., `https://your-org.getcollate.io/api/v1`) |
+| `TOKEN` | ✅ | JWT or Bot Token |
+| `OWNER_ID` | Optional | UUID for the user who will own imported entities |
+| `JSON_DIR` | ✅ | Path to metadata storage folder (e.g., `../json/`) |
 
-```bash
-export API_BASE="https://source.open-metadata.org/api/v1"
-export TOKEN="<your_token>"
-export OWNER_ID="<owner_uuid>"
-export JSON_DIR="~/.collate/json/"
-mkdir -p "$JSON_DIR"
-```
+---
 
-## Migration Workflow Example
-
-Demonstrates exporting a `RedshiftProd` service from a **Source** instance and importing to a **Target** instance.
-
-### 1. Export from Source
-```bash
-export API_BASE="https://source.open-metadata.org/api/v1"
-export TOKEN="<source_token>"
-
-# Export Service Definition
-# Output: ../json/databaseService/RedshiftProd.json
-python get_db_service.py "RedshiftProd"
-
-# Export Pipelines
-# Output: ../json/pipelines/RedshiftProd_pipelines.json
-python get_pipelines.py "RedshiftProd"
-
-# Export Lineage
-# Output: ../json/lineage/RedshiftProd_lineage.json
-python export_lineage.py "RedshiftProd"
-```
-
-### 2. Import to Target
-```bash
-export API_BASE="https://target.open-metadata.org/api/v1"
-export TOKEN="<target_token>"
-export OWNER_ID="<target_owner_uuid>"
-
-python import_db_service.py "$JSON_DIR/databaseService/RedshiftProd.json"
-python import_pipelines.py "$JSON_DIR/pipelines/RedshiftProd_pipelines.json"
-python import_lineage.py "RedshiftProd"
-```
-
-## Scripts Description
+## 🛠️ Main Utility Scripts
 
 ### Core Client
-*   **`om_client.py`**: Shared base class. Handles authentication headers, URL building, and provides common methods (`trigger_pipeline`, `deploy_pipeline`, `get_pipelines_for_service`, etc.). All other scripts import this.
-
----
-
-### Orchestration Suites
-Scripts that orchestrate a full sequence of operations for the CockroachDB suite.
-
-| Script | Description |
-|---|---|
-| `suite_get_cockroach.py` | Exports all CockroachDB services and their pipelines to `../json/` |
-| `suite_add_cockroach.py` | Imports from JSON, runs pre-import cleanup first |
-| `suite_deploy_pipelines_cockroach.py` | Deploys all ingestion pipelines for the suite |
-| `suite_run_pipelines_cockroach.py` | Runs each service (Metadata-first, then dependents) sequentially |
-| `suite_delete_cockroach.py` | Deletes all CockroachDB services and pipelines |
-| `suite_fix_crdb_privileges.py` | Applies `allow_unsafe_internals=true` to all CockroachDB connections |
-| `suite_update_host_port_cockroach.py <host:port>` | Updates `hostPort` for all CockroachDB services |
-
----
+*   **`om_client.py`**: Shared base class that handles authentication, URL building, and common API methods.
 
 ### Bulk Operations
-Scripts that loop through subdirectories in `$JSON_DIR` and import all files.
-
-| Script | Subdirectory | Import Script Used |
-|---|---|---|
-| `import_all_database_services.py` | `databaseService/` | `import_db_service.py` |
-| `import_all_glossaries.py` | `glossary/` | `import_glossary.py` |
-| `import_all_glossary_maps.py` | `glossaryMap/` | `apply_service_glossary_maps.py` |
-| `import_all_pipelines.py` | `pipelines/` | `import_pipelines.py` |
-| `deploy_all_pipelines.py` | `pipelines/` | N/A (Bulk Deploy) |
-| `import_all_search_services.py` | `searchService/` | `import_search_service.py` |
-
----
-
-### Service Management (Database & Search)
+These scripts loop through your `$JSON_DIR` subdirectories to import metadata in mass.
 
 | Script | Description |
 |---|---|
-| `get_db_service.py <service_name>` | Exports a Database Service to `../json/<service_name>.json` |
-| `import_db_service.py <file.json>` | Imports a Database Service from a JSON file |
-| `delete_service.py <service_name>` | Hard-deletes a Database Service by name (recursive) |
-| `list_services.py` | Lists all defined Database Services |
-| `get_search_service.py <service_name>` | Exports a Search Service to `../json/<service_name>.json` |
-| `import_search_service.py <file.json>` | Imports a Search Service from a JSON file |
+| `import_all_database_services.py` | Imports all `.json` files in `databaseService/` |
+| `import_all_glossaries.py` | Imports all `.json` files in `glossary/` |
+| `import_all_glossary_maps.py` | Applies all tag/glossary mappings in `glossaryMap/` |
+| `import_all_pipelines.py` | Imports all `.json` files in `pipelines/` |
+| `deploy_all_pipelines.py` | Deploys every ingestion pipeline currently defined in the system |
+| `import_all_search_services.py` | Imports all `.json` files in `searchService/` |
+
+### Service & Pipeline Management
+| Script | Description |
+|---|---|
+| `get_db_service.py <name>` | Exports a Database Service definition to JSON |
+| `import_db_service.py <file>` | Imports a Database Service from JSON |
+| `list_services.py` | Lists all defined services with their IDs and Status |
+| `delete_service.py <name>` | Hard-deletes a service and all its children (recursive) |
+| `run_service_pipelines.py <name>` | Triggers Metadata, wait for success, then triggers dependents |
+| `deploy_service_pipelines.py <name>` | Deploys all ingestion pipelines for a specific service |
+| `kill_pipeline.py <name>` | Sends a KILL signal to a stuck or running pipeline |
+
+### Glossary & Lineage (Generic)
+| Script | Description |
+|---|---|
+| `get_glossary.py <name>` | Exports a Glossary and its terms |
+| `import_glossary.py <file>` | Imports a Glossary (supports hierarchical terms) |
+| `get_service_glossary_maps.py` | Exports tag/glossary mappings for a service |
+| `apply_service_glossary_maps.py` | Re-applies mappings to entities on a target instance |
+| `export_lineage.py <service>` | Exports all lineage edges for a service |
+| `import_lineage.py <service>` | Re-creates lineage edges from a JSON export |
 
 ---
 
-### Pipeline Management
+## 🧪 Example & Demo Scripts (`examples/`)
 
+These scripts are located in the [examples/](file:///Users/jasonhaugland/gits/openmetadata_tooling/python-api/examples/) subdirectory. They often contains hardcoded values used for specific demo scenarios.
+
+### S3 & Snowflake Demo Workarounds
 | Script | Description |
 |---|---|
-| `get_pipelines.py <service_name>` | Exports all pipelines for a service to `../json/<service_name>_pipelines.json` |
-| `import_pipelines.py <file.json>` | Imports pipelines from a JSON file |
-| `deploy_service_pipelines.py <service_name>` | Deploys all pipelines for a service to the Kubernetes orchestrator |
-| `run_service_pipelines.py <service_name>` | Triggers Metadata pipeline, waits for success, then triggers dependents |
-| `kill_pipeline.py <pipeline_name>` | Sends a kill signal to a running or stuck pipeline |
-| `delete_pipelines.py <service_name>` | Hard-deletes all ingestion pipelines for a service |
-| `delete_pipeline_service.py <service_name>` | Hard-deletes a Pipeline Service entity |
-| `delete_entity_pipeline.py <pipeline_name>` | Hard-deletes a standard pipeline entity (e.g., a CDC pipeline) |
-| `add_cdc_pipeline.py` | Creates the `movr_cdc` CDC pipeline entity for CockroachDB |
+| `add_s3_column_lineage.py` | **Workaround**: Forcefully injects Column Lineage between S3 and Snowflake |
+| `restore_s3_container.py` | **Fix**: Restores the S3 bucket if the native agent soft-deletes it |
+| `upload_dbt_artifacts.py` | Uploads `manifest.json`, `catalog.json`, etc. to S3 for dbt ingestion |
+| `inspect_s3_security.py` | Inspects encryption, policies, and public access settings of the demo bucket |
+| `create_s3_container.py` | Programmatically creates a container if the agent fails to discover it |
 
----
-
-### Lineage Management
-
+### CockroachDB Demo Suites
 | Script | Description |
 |---|---|
-| `export_lineage.py <service_name>` | Exports all lineage edges for a database service (based on FQNs) |
-| `import_lineage.py <service_name|file.json>` | Imports lineage edges from JSON, resolving FQNs to IDs |
-| `add_er_lineage.py` | Adds ER lineage edges between CockroachDB movr tables |
-| `check_lineage.py [table_fqn]` | Fetches upstream/downstream lineage for a table (default: `movr.rides`) |
+| `suite_run_pipelines_cockroach.py` | Orchestrates the full sequential run of the CRDB demo |
+| `suite_add_cockroach.py` | Mass-imports the CRDB service stack from JSON |
+| `suite_delete_cockroach.py` | Wipes the entire CRDB demo stack clean |
+| `suite_fix_crdb_privileges.py` | Patches `allow_unsafe_internals` on all CRDB connections |
 
----
-
-### Glossary Management
-
+### Miscellaneous Examples
 | Script | Description |
 |---|---|
-| `get_glossary.py <glossary_name>` | Exports a Glossary and its terms to `../json/<glossary>_glossary.json` |
-| `import_glossary.py <file.json>` | Imports a Glossary and all its terms (sorted by hierarchy depth) |
-| `get_service_glossary_maps.py <service_name>` | Exports tag mappings for a service to `../json/<service>_glossary_map.json` |
-| `apply_service_glossary_maps.py <file.json>` | Applies tag mappings back to entities on a target instance |
-
----
-
-### Data Quality
-Scripts for exporting and managing Data Quality tests. To improve efficiency, DQ tests are automatically organized into subdirectories based on their associated service.
-
-| Script | Description |
-|---|---|
-| `get_dq_tests.py [service]` | Exports Test Suites and Test Cases to `../json/dataQuality/<service>/`. If no service is name provided, exports all. |
-| `import_dq_tests.py [suites\|cases\|all] [service]` | Imports Test Suites and Cases from JSON in bulk or for a specific service subdirectory. |
-
-> [!TIP]
-> **Filtering by Service:**
-> Both scripts now support an optional `service_name` argument. If provided, the scripts will only process tests associated with that specific service.
-> - `python3 get_dq_tests.py "BigqueryProd"`
-> - `python3 import_dq_tests.py all "redshift prod"`
-
-> [!NOTE]
-> `get_dq_tests.py` uses the Search API to identify test IDs and then fetches each individually. This ensures it doesn't crash on "orphaned" entities (tests tied to deleted tables) and simply skips them.
-
----
-
-### Connection Management
-
-| Script | Description |
-|---|---|
-| `update_db_service_host_port.py <service_name> <host:port>` | Updates the `hostPort` for a specific Database Service |
-| `patch_crdb_connection_options.py <service_name>` | Applies `allow_unsafe_internals=true` to a single CockroachDB service connection |
-
----
-
-### Utilities
-
-| Script | Description |
-|---|---|
-| `check_server_status.py` | Polls the OM server until it reports healthy; uses `SLEEP_SECONDS` and `MAX_RETRIES` |
-| `check_collate_status.py` | Like `check_server_status.py` but ignores non-critical migration failures for Collate SaaS |
-| `get_owner_id.py <owner_name>` | Resolves an owner's display name to their UUID |
-| `get_table_metadata.py <table_fqn>` | Fetches tags and extension metadata for a specific table FQN |
-| `list_users.py` | Lists all users with their names, IDs, and admin/bot flags |
-| `list_roles.py` | Lists all roles with their IDs |
-| `compare_counts.py` | Compares user counts between the OM database and the Elasticsearch index |
-| `delete_user_team.py` | Hard-deletes the configured user (`jason.haugland`) and team (`Solution Architects`) |
+| `sync_all_lineage.py` | Syncs dbt and native lineage (used for dbt-to-S3-to-Snowflake demo) |
+| `check_lineage.py` | Fetches a JSON dump of upstream/downstream lineage for a specific table |
+| `compare_counts.py` | Validates synchronization between the DB and the Search Index |
+| `add_cdc_pipeline.py` | Example of creating an Ingestion Pipeline entity via API |
+| `add_er_lineage.py` | Manual injection of Entity-Relationship lineage |

@@ -5,6 +5,7 @@
 -- ============================================================
 -- 1. SESSION CONTEXT
 -- ============================================================
+USE ROLE SALES_ENGINEERS;
 USE WAREHOUSE DEMO_WH;
 USE DATABASE CUSTOMERS;
 
@@ -20,7 +21,7 @@ USE SCHEMA CUSTOMERS.COLLATE_SE;
 -- ============================================================
 
 CREATE OR REPLACE TABLE COLLATE_SE.RAW_CUSTOMERS (
-    ID          NUMBER    COMMENT 'potato new',
+    ID          NUMBER,
     FIRST_NAME  VARCHAR,
     LAST_NAME   VARCHAR
 ) COMMENT = 'RAW CUSTOMERS';

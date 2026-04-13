@@ -68,6 +68,7 @@ def main():
         private_key=get_private_key_bytes(PRIVATE_KEY_PATH),
         warehouse="DEMO_WH",
         database="CUSTOMERS",
+        role="SALES_ENGINEERS"
     )
 
     try:

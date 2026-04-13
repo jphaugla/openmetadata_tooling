@@ -20,7 +20,10 @@ import requests
 import os
 import sys
 
-BASE_URL = "https://jsonh.pov.getcollate.io/api/v1"
+BASE_URL = os.environ.get("API_BASE")
+if not BASE_URL:
+    print("❌ API_BASE environment variable not set. Run: source ~/.collate/setJson.sh")
+    sys.exit(1)
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 S3_SERVICE_FQN    = "S3-Interchange"

@@ -50,7 +50,8 @@ def main():
     conn = snowflake.connector.connect(
         user=SNOWFLAKE_USER, account=SNOWFLAKE_ACCOUNT,
         private_key=get_private_key_bytes(PRIVATE_KEY_PATH),
-        warehouse="DEMO_WH", database="CUSTOMERS", schema="COLLATE_SE"
+        warehouse="DEMO_WH", database="CUSTOMERS", schema="COLLATE_SE",
+        role="SALES_ENGINEERS"
     )
 
     try:

@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: snowflake_raw
+    database: CUSTOMERS
+    schema: COLLATE_SE
+    tables:
+      - name: RAW_CUSTOMERS
+        description: "Raw customer data ingested from S3"
+      - name: RAW_ORDERS
+        description: "Raw order data ingested from S3"
+      - name: RAW_ORDER_ITEMS
+        description: "Raw order items data"
+      - name: RAW_PRODUCTS
+        description: "Raw product catalog data"

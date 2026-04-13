@@ -3,7 +3,9 @@ mcp/om-mcp-workspace/
 # Virtual Environments
 **/venv/
 **/.venv/
+dbt/venv/
 snowflake/venv/
+python-api/venv/
 ingestionFramework/venv-collate/
 
 # Snowflake Keys
