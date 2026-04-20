@@ -8,22 +8,22 @@ TABLES = [
     {
         "fqn": "Enterprise_SE.CUSTOMERS.COLLATE_SE.RAW_CUSTOMERS",
         "cols": "ID,FIRST_NAME,LAST_NAME",
-        "file": "raw_customers_export.csv"
+        "file": "customers"
     },
     {
         "fqn": "Enterprise_SE.CUSTOMERS.COLLATE_SE.RAW_ORDERS",
         "cols": "ID,USER_ID,ORDER_DATE,STATUS",
-        "file": "raw_orders_export.csv"
+        "file": "orders"
     },
     {
         "fqn": "Enterprise_SE.CUSTOMERS.COLLATE_SE.RAW_ORDER_ITEMS",
         "cols": "ORDER_ITEM_ID,ORDER_ID,PRODUCT_ID,QUANTITY,UNIT_PRICE,TOTAL_AMOUNT",
-        "file": "raw_order_items_export.csv"
+        "file": "order_items"
     },
     {
         "fqn": "Enterprise_SE.CUSTOMERS.COLLATE_SE.RAW_PRODUCTS",
         "cols": "PRODUCT_ID,PRODUCT_NAME,CATEGORY,ECO_FRIENDLY,UNIT_PRICE",
-        "file": "raw_products_export.csv"
+        "file": "products"
     }
 ]
 

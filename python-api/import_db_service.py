@@ -70,6 +70,24 @@ def main():
         for k in keys_to_remove:
             del conn_config[k]
 
+        # 3. Strip any leftover "secret:/" pointers that cannot be automatically resolved
+        for key in list(conn_config.keys()):
+            val = conn_config[key]
+            if isinstance(val, str) and val.startswith("secret:/"):
+               del conn_config[key]
+
+        # 4. Inject real secrets from local vault
+        secret_file = os.path.expanduser(f"~/.collate/secrets/{name}.json")
+        if os.path.isfile(secret_file):
+            print(f"   🔐 Found local secrets vault for '{name}', safely injecting key material...")
+            with open(secret_file, "r") as sf:
+                try:
+                    local_secrets = json.load(sf)
+                    for k, v in local_secrets.items():
+                        conn_config[k] = v
+                except json.JSONDecodeError:
+                    print(f"   ⚠️ Warning: Invalid JSON in secrets file {secret_file}")
+
     # Inject CockroachDB specific workaround (from previous fix)
     if service_type == "Cockroach":
         conn_config = create_payload.get("connection", {}).get("config", {})

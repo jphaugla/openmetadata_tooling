@@ -9,10 +9,13 @@ It replaces the legacy manual SQL scripts (`run_queries.py`) with a structured, 
 ```text
 dbt/
 ├── dbt_project.yml    # Project configuration
+├── macros/
+│   └── load_s3_data.sql # Executes Snowflake COPY INTO from S3
 ├── models/
 │   ├── sources.yml    # Definition of raw Snowflake tables (from S3)
 │   ├── staging/       # Initial cleanup and renaming
 │   └── production/    # Final business entities (Customers, Orders, etc.)
+├── run_with_aws.py    # Wrapper script to securely inject AWS credentials
 └── README.md          # This file
 ```
 
@@ -47,11 +50,17 @@ collate_snowflake:
       threads: 4
 ```
 
-### 3. Run dbt
-Navigate to this directory and run the transformations:
+### 3. Load S3 Data & Run dbt
+Before running dbt, you must load the raw `.csv` data from S3 into the raw Snowflake tables. Because Snowflake `COPY INTO` requires AWS permissions to read the buckets, we use a wrapper script that automatically grabs your SSO credentials and feeds them to the dbt macro.
+
+Ensure you have run `aws sso login` recently, then execute:
 
 ```bash
 cd dbt
+# 1. Inject AWS creds and load raw S3 data into Snowflake
+./run_with_aws.py run-operation load_s3_data --target-path target_custom
+
+# 2. Transform the raw data into finalized business entities
 dbt run
 ```
 

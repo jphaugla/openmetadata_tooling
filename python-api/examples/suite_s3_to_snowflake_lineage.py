@@ -5,10 +5,10 @@ import sys
 
 # Mappings for the demo: (Table Name, Columns, CSV File Name)
 MAPPINGS = [
-    ("RAW_CUSTOMERS",   "ID,FIRST_NAME,LAST_NAME",                 "raw_customers_export.csv"),
-    ("RAW_ORDERS",      "ID,USER_ID,ORDER_DATE,STATUS",            "raw_orders_export.csv"),
-    ("RAW_ORDER_ITEMS", "ORDER_ITEM_ID,ORDER_ID,PRODUCT_ID,QUANTITY,UNIT_PRICE,TOTAL_AMOUNT", "raw_order_items_export.csv"),
-    ("RAW_PRODUCTS",    "PRODUCT_ID,PRODUCT_NAME,CATEGORY,ECO_FRIENDLY,UNIT_PRICE", "raw_products_export.csv")
+    ("RAW_CUSTOMERS",   "ID,FIRST_NAME,LAST_NAME",                 "customers"),
+    ("RAW_ORDERS",      "ID,USER_ID,ORDER_DATE,STATUS",            "orders"),
+    ("RAW_ORDER_ITEMS", "ORDER_ITEM_ID,ORDER_ID,PRODUCT_ID,QUANTITY,UNIT_PRICE,TOTAL_AMOUNT", "order_items"),
+    ("RAW_PRODUCTS",    "PRODUCT_ID,PRODUCT_NAME,CATEGORY,ECO_FRIENDLY,UNIT_PRICE", "products")
 ]
 
 BASE_FQN = "Enterprise_SE.CUSTOMERS.COLLATE_SE"

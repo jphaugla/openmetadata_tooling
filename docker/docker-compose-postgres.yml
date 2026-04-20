@@ -15,18 +15,12 @@ volumes:
   ingestion-volume-dags:
   ingestion-volume-tmp:
   es-data:
-  postgres-data:
-
 services:
   postgresql:
     container_name: openmetadata_postgresql
-    image: docker.getcollate.io/openmetadata/postgresql:1.12.1
+    image: docker.getcollate.io/openmetadata/postgresql:1.12.5
     restart: always
-    command: >
-      postgres
-      -c work_mem=10MB
-      -c shared_preload_libraries=pg_stat_statements
-      -c pg_stat_statements.track=all
+    command: "--work_mem=10MB"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -35,7 +29,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-     - postgres-data:/var/lib/postgresql/data
+     - ./docker-volume/db-data-postgres:/var/lib/postgresql/data
     
     networks:
       - app_net
@@ -67,7 +61,7 @@ services:
 
   execute-migrate-all:
     container_name: execute_migrate_all
-    image: docker.getcollate.io/openmetadata/server:1.12.1
+    image: docker.getcollate.io/openmetadata/server:1.12.5
     command: "./bootstrap/openmetadata-ops.sh migrate"
     environment:
       OPENMETADATA_CLUSTER_NAME: ${OPENMETADATA_CLUSTER_NAME:-openmetadata}
@@ -292,7 +286,7 @@ services:
   openmetadata-server:
     container_name: openmetadata_server
     restart: always
-    image: docker.getcollate.io/openmetadata/server:1.12.1
+    image: docker.getcollate.io/openmetadata/server:1.12.5
     environment:
       OPENMETADATA_CLUSTER_NAME: ${OPENMETADATA_CLUSTER_NAME:-openmetadata}
       SERVER_PORT: ${SERVER_PORT:-8585}
@@ -511,7 +505,7 @@ services:
 
   ingestion:
     container_name: openmetadata_ingestion
-    image: docker.getcollate.io/openmetadata/ingestion:1.12.1
+    image: docker.getcollate.io/openmetadata/ingestion:1.12.5
     depends_on:
       elasticsearch:
         condition: service_started

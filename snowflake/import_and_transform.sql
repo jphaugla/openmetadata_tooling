@@ -16,25 +16,25 @@ USE SCHEMA COLLATE_SE;
 
 -- RAW_CUSTOMERS
 COPY INTO RAW_CUSTOMERS
-FROM 's3://collate-snowflake-interchange-118146679784/raw_customers_export.csv'
+FROM 's3://collate-snowflake-interchange-118146679784/customers/raw_customers_export.csv'
 FILE_FORMAT = (TYPE = 'CSV', SKIP_HEADER = 1, FIELD_OPTIONALLY_ENCLOSED_BY = '"')
 ON_ERROR = 'CONTINUE';
 
 -- RAW_ORDERS
 COPY INTO RAW_ORDERS
-FROM 's3://collate-snowflake-interchange-118146679784/raw_orders_export.csv'
+FROM 's3://collate-snowflake-interchange-118146679784/orders/raw_orders_export.csv'
 FILE_FORMAT = (TYPE = 'CSV', SKIP_HEADER = 1, FIELD_OPTIONALLY_ENCLOSED_BY = '"')
 ON_ERROR = 'CONTINUE';
 
 -- RAW_ORDER_ITEMS
 COPY INTO RAW_ORDER_ITEMS
-FROM 's3://collate-snowflake-interchange-118146679784/raw_order_items_export.csv'
+FROM 's3://collate-snowflake-interchange-118146679784/order_items/raw_order_items_export.csv'
 FILE_FORMAT = (TYPE = 'CSV', SKIP_HEADER = 1, FIELD_OPTIONALLY_ENCLOSED_BY = '"')
 ON_ERROR = 'CONTINUE';
 
 -- RAW_PRODUCTS
 COPY INTO RAW_PRODUCTS
-FROM 's3://collate-snowflake-interchange-118146679784/raw_products_export.csv'
+FROM 's3://collate-snowflake-interchange-118146679784/products/raw_products_export.csv'
 FILE_FORMAT = (TYPE = 'CSV', SKIP_HEADER = 1, FIELD_OPTIONALLY_ENCLOSED_BY = '"')
 ON_ERROR = 'CONTINUE';
 
@@ -45,18 +45,14 @@ ON_ERROR = 'CONTINUE';
 -- CUSTOMERS: Full load in one shot for perfect column-level lineage
 TRUNCATE TABLE CUSTOMERS;
 INSERT INTO CUSTOMERS (
-    CUSTOMER_ID, FIRST_NAME, LAST_NAME, FULL_NAME, PRIORITY_SCORE
+    CUSTOMER_ID, FIRST_NAME, LAST_NAME, FULL_NAME, LAST_UPDATE_AT
 )
 SELECT 
     rc.ID AS CUSTOMER_ID,
     rc.FIRST_NAME,
     rc.LAST_NAME,
     CONCAT(rc.FIRST_NAME, ' ', rc.LAST_NAME) AS FULL_NAME,
-    CASE 
-        WHEN rc.ID < 1000 AND rc.FIRST_NAME IS NOT NULL AND rc.LAST_NAME IS NOT NULL THEN 'High Priority'
-        WHEN rc.FIRST_NAME IS NOT NULL AND rc.LAST_NAME IS NOT NULL THEN 'Standard'
-        ELSE 'Incomplete Profile'
-    END AS PRIORITY_SCORE
+    CURRENT_TIMESTAMP() as LAST_UPDATE_AT
 FROM RAW_CUSTOMERS rc;
 
 -- ORDERS: from RAW_ORDERS (updated details below)
@@ -94,13 +90,6 @@ FROM RAW_PRODUCTS;
 -- ============================================================
 -- 6. SUMMARY TABLES
 -- ============================================================
-TRUNCATE TABLE CUSTOMER_LIFETIME_VALUE;
-INSERT INTO CUSTOMER_LIFETIME_VALUE (CUSTOMER_ID, TOTAL_ORDER, TOTAL_REVENUE, AVERAGE_ORDER_VALUE, SEGMENT)
-SELECT CUSTOMER_ID, NUMBER_OF_ORDERS, CUSTOMER_LIFETIME_VALUE, 
-       CUSTOMER_LIFETIME_VALUE/NULLIF(NUMBER_OF_ORDERS,0),
-       CASE WHEN CUSTOMER_LIFETIME_VALUE > 200 THEN 'Gold' ELSE 'Silver' END
-FROM CUSTOMERS;
-
 TRUNCATE TABLE PRODUCT_PERFORMANCE;
 INSERT INTO PRODUCT_PERFORMANCE (PRODUCT_ID, PRODUCT_NAME, TOTAL_ORDERS, TOTAL_REVENUE)
 SELECT p.PRODUCT_ID, p.PRODUCT_NAME, COUNT(DISTINCT oi.ORDER_ID), SUM(oi.TOTAL_AMOUNT)

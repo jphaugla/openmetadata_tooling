@@ -22,10 +22,10 @@ S3_BUCKET = "collate-snowflake-interchange-118146679784"
 
 # Tables to export: (source_table, s3_key, local_tmp)
 EXPORTS = [
-    ("RAW_CUSTOMERS",  "raw_customers_export.csv",   "/tmp/raw_customers_export.csv"),
-    ("RAW_ORDERS",     "raw_orders_export.csv",       "/tmp/raw_orders_export.csv"),
-    ("ORDER_ITEMS",    "raw_order_items_export.csv",  "/tmp/raw_order_items_export.csv"),
-    ("PRODUCTS",       "raw_products_export.csv",     "/tmp/raw_products_export.csv"),
+    ("RAW_CUSTOMERS",  "customers/raw_customers_export.csv",     "/tmp/raw_customers_export.csv"),
+    ("RAW_ORDERS",     "orders/raw_orders_export.csv",           "/tmp/raw_orders_export.csv"),
+    ("ORDER_ITEMS",    "order_items/raw_order_items_export.csv", "/tmp/raw_order_items_export.csv"),
+    ("PRODUCTS",       "products/raw_products_export.csv",       "/tmp/raw_products_export.csv"),
 ]
 
 # File path to the unencrypted private key

@@ -33,3 +33,12 @@ openmetadata_helm/deps.yaml
 __pycache__/
 *.pyc
 *.pyo
+
+# dbt
+dbt/target/
+dbt/dbt_tgts/
+dbt/target_custom/
+dbt/logs/
+dbt/dbt_packages/
+dbt/dbt_modules/
+dbt/profiles.yml

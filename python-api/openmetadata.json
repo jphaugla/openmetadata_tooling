@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "dataPath": "customers",
+      "structureFormat": "csv",
+      "isPartitioned": false
+    },
+    {
+      "dataPath": "order_items",
+      "structureFormat": "csv",
+      "isPartitioned": false
+    },
+    {
+      "dataPath": "orders",
+      "structureFormat": "csv",
+      "isPartitioned": false
+    },
+    {
+      "dataPath": "products",
+      "structureFormat": "csv",
+      "isPartitioned": false
+    }
+  ]
+}
