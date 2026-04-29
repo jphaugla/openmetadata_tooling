@@ -58,10 +58,13 @@ These scripts loop through your `$JSON_DIR` subdirectories to import metadata in
 |---|---|
 | `get_db_service.py <name>` | Exports a Database Service definition to JSON |
 | `import_db_service.py <file>` | Imports a Database Service from JSON |
+| `get_dashboard_service.py <name>` | Exports a Dashboard Service definition to JSON |
+| `import_dashboard_service.py <file>` | Imports a Dashboard Service from JSON |
 | `list_services.py` | Lists all defined services with their IDs and Status |
 | `delete_service.py <name>` | Hard-deletes a service and all its children (recursive) |
 | `run_service_pipelines.py <name>` | Triggers Metadata, wait for success, then triggers dependents |
 | `deploy_service_pipelines.py <name>` | Deploys all ingestion pipelines for a specific service |
+| `get_ingestion_ip.py` | Returns the Ingestion IP and whitelisting explanation |
 | `kill_pipeline.py <name>` | Sends a KILL signal to a stuck or running pipeline |
 
 ### Glossary & Lineage (Generic)
