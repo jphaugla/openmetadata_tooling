@@ -39,12 +39,16 @@ def main():
     
     kill_response = client._make_request("POST", f"/services/ingestionPipelines/kill/{pipeline_id}")
     
-    if kill_response and kill_response.status_code == 200:
+    if kill_response is not None and kill_response.status_code == 200:
         print("✅ Kill signal sent successfully. It may take a few moments for the status to update in the UI.")
     else:
-        err = kill_response.json().get("message", kill_response.text) if kill_response else "Unknown HTTP Error"
+        err = "Unknown HTTP Error"
+        if kill_response is not None:
+            try:
+                err = kill_response.json().get("message", kill_response.text)
+            except Exception:
+                err = kill_response.text
         print("⚠️  Kill operation reported a problem.")
         print(f"   Message: {err}")
-
 if __name__ == "__main__":
     main()

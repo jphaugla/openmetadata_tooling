@@ -62,10 +62,12 @@ These scripts loop through your `$JSON_DIR` subdirectories to import metadata in
 | `import_dashboard_service.py <file>` | Imports a Dashboard Service from JSON |
 | `list_services.py` | Lists all defined services with their IDs and Status |
 | `delete_service.py <name>` | Hard-deletes a service and all its children (recursive) |
+| 'get_service_pipeline_status.py <service_name>` | Maps all ingestion pipelines for a service with explicit Pipeline Name, ID, FQN, Type, and recent history logs. |
+| `get_pipeline_logs.py <id_or_fqn> [run_id]` | Resolves a pipeline to its FQN, extracts orchestrator execution logs, and handles Argo step-nodes automatically. |
 | `run_service_pipelines.py <name>` | Triggers Metadata, wait for success, then triggers dependents |
 | `deploy_service_pipelines.py <name>` | Deploys all ingestion pipelines for a specific service |
 | `get_ingestion_ip.py` | Returns the Ingestion IP and whitelisting explanation |
-| `kill_pipeline.py <name>` | Sends a KILL signal to a stuck or running pipeline |
+| `kill_pipeline.py <name_or_fqn>` | Resolves a pipeline Name or FQN string to its database GUID ID and sends a terminating KILL signal. |
 
 ### Glossary & Lineage (Generic)
 | Script | Description |

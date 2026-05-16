@@ -1,4 +1,4 @@
 # getComposeFiles.sh
-export VERSION=1.12.5
+export VERSION=1.12.8
 curl -sL -o docker-compose.yml "https://github.com/open-metadata/OpenMetadata/releases/download/${VERSION}-release/docker-compose.yml"
 curl -sL -o docker-compose-postgres.yml https://github.com/open-metadata/OpenMetadata/releases/download/${VERSION}-release/docker-compose-postgres.yml

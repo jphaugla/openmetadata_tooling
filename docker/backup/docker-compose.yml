@@ -16,25 +16,23 @@ volumes:
   ingestion-volume-tmp:
   es-data:
 services:
-  postgresql:
-    container_name: openmetadata_postgresql
-    image: docker.getcollate.io/openmetadata/postgresql:1.12.8
+  mysql:
+    container_name: openmetadata_mysql
+    image: docker.getcollate.io/openmetadata/db:1.12.5
+    command: "--sort_buffer_size=10M"
     restart: always
-    command: "--work_mem=10MB"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
     expose:
-      - 5432
+      - 3306
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-     - ./docker-volume/db-data-postgres:/var/lib/postgresql/data
-    
+     - ./docker-volume/db-data:/var/lib/mysql
     networks:
       - app_net
     healthcheck:
-      test: psql -U postgres -tAc 'select 1' -d openmetadata_db
+      test: mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --silent --execute "use openmetadata_db"
       interval: 15s
       timeout: 10s
       retries: 10
@@ -61,17 +59,17 @@ services:
 
   execute-migrate-all:
     container_name: execute_migrate_all
-    image: docker.getcollate.io/openmetadata/server:1.12.8
+    image: docker.getcollate.io/openmetadata/server:1.12.5
     command: "./bootstrap/openmetadata-ops.sh migrate"
     environment:
       OPENMETADATA_CLUSTER_NAME: ${OPENMETADATA_CLUSTER_NAME:-openmetadata}
       SERVER_PORT: ${SERVER_PORT:-8585}
       SERVER_ADMIN_PORT: ${SERVER_ADMIN_PORT:-8586}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-
+      
       # Migration 
       MIGRATION_LIMIT_PARAM: ${MIGRATION_LIMIT_PARAM:-1200}
-      
+
       # OpenMetadata Server Authentication Configuration
       AUTHORIZER_CLASS_NAME: ${AUTHORIZER_CLASS_NAME:-org.openmetadata.service.security.DefaultAuthorizer}
       AUTHORIZER_REQUEST_FILTER: ${AUTHORIZER_REQUEST_FILTER:-org.openmetadata.service.security.JwtFilter}
@@ -164,14 +162,14 @@ services:
       SERVER_HOST_API_URL: ${SERVER_HOST_API_URL:-http://openmetadata-server:8585/api}
       PIPELINE_SERVICE_CLIENT_VERIFY_SSL: ${PIPELINE_SERVICE_CLIENT_VERIFY_SSL:-"no-ssl"}
       PIPELINE_SERVICE_CLIENT_SSL_CERT_PATH: ${PIPELINE_SERVICE_CLIENT_SSL_CERT_PATH:-""}
-      #Database configuration for postgresql
-      DB_DRIVER_CLASS: ${DB_DRIVER_CLASS:-org.postgresql.Driver}
-      DB_SCHEME: ${DB_SCHEME:-postgresql}
+      # Database configuration for MySQL
+      DB_DRIVER_CLASS: ${DB_DRIVER_CLASS:-com.mysql.cj.jdbc.Driver}
+      DB_SCHEME: ${DB_SCHEME:-mysql}
       DB_PARAMS: ${DB_PARAMS:-allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
       DB_USER: ${DB_USER:-openmetadata_user}
       DB_USER_PASSWORD: ${DB_USER_PASSWORD:-openmetadata_password}
-      DB_HOST: ${DB_HOST:-postgresql}
-      DB_PORT: ${DB_PORT:-5432}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
       OM_DATABASE: ${OM_DATABASE:-openmetadata_db}
       # ElasticSearch Configurations
       ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST:- elasticsearch}
@@ -239,7 +237,7 @@ services:
       SMTP_SERVER_USERNAME: ${SMTP_SERVER_USERNAME:-""}
       SMTP_SERVER_PWD: ${SMTP_SERVER_PWD:-""}
       SMTP_SERVER_STRATEGY: ${SMTP_SERVER_STRATEGY:-"SMTP_TLS"}
-      
+
       # Heap OPTS Configurations
       OPENMETADATA_HEAP_OPTS: ${OPENMETADATA_HEAP_OPTS:--Xmx1G -Xms1G}
       # Mask passwords values in UI
@@ -278,7 +276,7 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-      postgresql:
+      mysql:
         condition: service_healthy
     networks:
       - app_net
@@ -286,7 +284,7 @@ services:
   openmetadata-server:
     container_name: openmetadata_server
     restart: always
-    image: docker.getcollate.io/openmetadata/server:1.12.8
+    image: docker.getcollate.io/openmetadata/server:1.12.5
     environment:
       OPENMETADATA_CLUSTER_NAME: ${OPENMETADATA_CLUSTER_NAME:-openmetadata}
       SERVER_PORT: ${SERVER_PORT:-8585}
@@ -385,14 +383,14 @@ services:
       SERVER_HOST_API_URL: ${SERVER_HOST_API_URL:-http://openmetadata-server:8585/api}
       PIPELINE_SERVICE_CLIENT_VERIFY_SSL: ${PIPELINE_SERVICE_CLIENT_VERIFY_SSL:-"no-ssl"}
       PIPELINE_SERVICE_CLIENT_SSL_CERT_PATH: ${PIPELINE_SERVICE_CLIENT_SSL_CERT_PATH:-""}
-      #Database configuration for postgresql
-      DB_DRIVER_CLASS: ${DB_DRIVER_CLASS:-org.postgresql.Driver}
-      DB_SCHEME: ${DB_SCHEME:-postgresql}
+      # Database configuration for MySQL
+      DB_DRIVER_CLASS: ${DB_DRIVER_CLASS:-com.mysql.cj.jdbc.Driver}
+      DB_SCHEME: ${DB_SCHEME:-mysql}
       DB_PARAMS: ${DB_PARAMS:-allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
       DB_USER: ${DB_USER:-openmetadata_user}
       DB_USER_PASSWORD: ${DB_USER_PASSWORD:-openmetadata_password}
-      DB_HOST: ${DB_HOST:-postgresql}
-      DB_PORT: ${DB_PORT:-5432}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
       OM_DATABASE: ${OM_DATABASE:-openmetadata_db}
       # ElasticSearch Configurations
       ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST:- elasticsearch}
@@ -485,6 +483,7 @@ services:
       #Cache
       WEB_CONF_CACHE_CONTROL: ${WEB_CONF_CACHE_CONTROL:-""}
       WEB_CONF_PRAGMA: ${WEB_CONF_PRAGMA:-""}
+    
     expose:
       - 8585
       - 8586
@@ -494,7 +493,7 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-      postgresql:
+      mysql:
         condition: service_healthy
       execute-migrate-all:
         condition: service_completed_successfully
@@ -505,11 +504,11 @@ services:
 
   ingestion:
     container_name: openmetadata_ingestion
-    image: docker.getcollate.io/openmetadata/ingestion:1.12.8
+    image: docker.getcollate.io/openmetadata/ingestion:1.12.5
     depends_on:
       elasticsearch:
         condition: service_started
-      postgresql:
+      mysql:
         condition: service_healthy
       openmetadata-server:
         condition: service_started
@@ -517,11 +516,11 @@ services:
       AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__OPENMETADATA_AIRFLOW_APIS__DAG_GENERATED_CONFIGS: "/opt/airflow/dag_generated_configs"
-      DB_HOST: ${AIRFLOW_DB_HOST:-postgresql}
-      DB_PORT: ${AIRFLOW_DB_PORT:-5432}
+      DB_HOST: ${AIRFLOW_DB_HOST:-mysql}
+      DB_PORT: ${AIRFLOW_DB_PORT:-3306}
       AIRFLOW_DB: ${AIRFLOW_DB:-airflow_db}
+      DB_SCHEME: ${AIRFLOW_DB_SCHEME:-mysql+mysqldb}
       DB_USER: ${AIRFLOW_DB_USER:-airflow_user}
-      DB_SCHEME: ${AIRFLOW_DB_SCHEME:-postgresql+psycopg2}
       DB_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow_pass}
       # extra connection-string properties for the database
       # EXAMPLE 
@@ -546,6 +545,7 @@ services:
       - ingestion-volume-dag-airflow:/opt/airflow/dag_generated_configs
       - ingestion-volume-dags:/opt/airflow/dags
       - ingestion-volume-tmp:/tmp
+
 
 networks:
   app_net:
