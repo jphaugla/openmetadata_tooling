@@ -54,8 +54,8 @@ def measure_individual_tables(client, fqn, table_query_param):
     
     return export_duration, import_duration
 
-def measure_bulk_csv_file(client, fqn, endpoint_prefix, csv_file_path, fqn_type):
-    print(f"\n⏱️  [Method 2] Starting Bulk File-Based Export/Import ({fqn_type})...")
+def measure_bulk_csv_file(client, fqn, endpoint_prefix, csv_file_path):
+    print(f"\n⏱️  [Method 2] Starting Bulk File-Based Export/Import ({csv_file_path})...")
     encoded_fqn = urllib.parse.quote(fqn)
     
     # 1. Export Phase (Save to CSV File)
@@ -92,35 +92,6 @@ def measure_bulk_csv_file(client, fqn, endpoint_prefix, csv_file_path, fqn_type)
     print(f"  ✅ Import complete using CSV file asset transfer.")
     return export_duration, import_duration
 
-def measure_pure_bulk_dump_load(client, fqn, endpoint_prefix, fqn_type):
-    print(f"\n⏱️  [Method 3] Starting Pure In-Memory {fqn_type} Dump/Load Test...")
-    encoded_fqn = urllib.parse.quote(fqn)
-    
-    # 1. Export Phase (In-Memory String)
-    export_start = time.time()
-    resp = client._make_request("GET", f"/{endpoint_prefix}/name/{encoded_fqn}/export")
-    export_duration = time.time() - export_start
-    
-    if not resp or resp.status_code != 200:
-        print(f"❌ Pure Bulk Export failed for: {fqn}")
-        return None, None
-        
-    csv_data = resp.text
-    
-    # 2. Import Phase (Direct Payload Stream)
-    import_start = time.time()
-    client.headers["Content-Type"] = "text/plain"
-    resp_imp = client._make_request("PUT", f"/{endpoint_prefix}/name/{encoded_fqn}/import", data=csv_data)
-    client.headers["Content-Type"] = "application/json"
-    import_duration = time.time() - import_start
-    
-    if not resp_imp or resp_imp.status_code != 200:
-        print(f"❌ Pure Bulk Import failed for: {fqn}")
-        return export_duration, None
-        
-    print(f"  ✅ Pure In-Memory bulk transfer complete.")
-    return export_duration, import_duration
-
 def main():
     if len(sys.argv) != 2:
         print("❌ Usage: python table_load_comparison.py <database_or_schema_fqn>")
@@ -132,7 +103,7 @@ def main():
     fqn = sys.argv[1]
     parts = fqn.split('.')
     
-    # Determine type and endpoints based on naming depth
+    # Dynamically pivot parameters depending on context depth
     if len(parts) >= 3:
         fqn_type = "Database Schema"
         table_query_param = "databaseSchema"
@@ -142,7 +113,7 @@ def main():
         table_query_param = "database"
         endpoint_prefix = "databases"
 
-    # Directory mapping
+    # Set up JSON_DIR pathing matching your other tools
     json_dir = os.environ.get("JSON_DIR", os.path.join(os.path.dirname(__file__), "..", "json"))
     os.makedirs(json_dir, exist_ok=True)
     csv_file_path = os.path.join(json_dir, f"{fqn}.csv")
@@ -150,31 +121,29 @@ def main():
     client = OpenMetadataClient()
     
     print(f"🚀 Starting Benchmarks for {fqn_type}: {fqn}")
-    print(f"📂 CSV File Destination: {csv_file_path}")
+    print(f"📂 Output File Destination: {csv_file_path}")
     
-    # Execute all 3 methods
+    # Execute the two narrowed down target methods
     m1_exp, m1_imp = measure_individual_tables(client, fqn, table_query_param)
-    m2_exp, m2_imp = measure_bulk_csv_file(client, fqn, endpoint_prefix, csv_file_path, fqn_type)
-    m3_exp, m3_imp = measure_pure_bulk_dump_load(client, fqn, endpoint_prefix, fqn_type)
+    m2_exp, m2_imp = measure_bulk_csv_file(client, fqn, endpoint_prefix, csv_file_path)
     
-    # Output metrics panel
-    print("\n" + "="*75)
-    print(f"{'METRIC COMPARISON':<42} | {'EXPORT TIME':<13} | {'IMPORT TIME':<13}")
-    print("="*75)
+    # Output Comparative Performance Summary
+    print("\n" + "="*70)
+    print(f"{'METRIC COMPARISON':<38} | {'EXPORT TIME':<13} | {'IMPORT TIME':<13}")
+    print("="*70)
     
     def format_time(t):
         return f"{t:.4f}s" if t is not None else "FAILED"
         
-    print(f"{'1. Individual Table Loop':<42} | {format_time(m1_exp):<13} | {format_time(m1_imp):<13}")
-    print(f"{f'2. Bulk CSV File ({fqn_type})':<42} | {format_time(m2_exp):<13} | {format_time(m2_imp):<13}")
-    print(f"{f'3. Pure Bulk Dump/Load ({fqn_type})':<42} | {format_time(m3_exp):<13} | {format_time(m3_imp):<13}")
-    print("-"*75)
+    print(f"{'1. Individual Table Loop':<38} | {format_time(m1_exp):<13} | {format_time(m1_imp):<13}")
+    print(f"{f'2. Bulk CSV File ({fqn_type})':<38} | {format_time(m2_exp):<13} | {format_time(m2_imp):<13}")
+    print("-"*70)
     
-    if m1_exp and m3_exp and m3_exp > 0:
-        print(f"💡 Pure Bulk Export is {m1_exp / m3_exp:.2f}x faster than Table Looping.")
-    if m1_imp and m3_imp and m3_imp > 0:
-        print(f"💡 Pure Bulk Import is {m1_imp / m3_imp:.2f}x faster than Table Looping.")
-    print("="*75)
+    if m1_exp and m2_exp and m2_exp > 0:
+        print(f"💡 Bulk CSV Export is {m1_exp / m2_exp:.2f}x faster than Table Looping.")
+    if m1_imp and m2_imp and m2_imp > 0:
+        print(f"💡 Bulk CSV Import is {m1_imp / m2_imp:.2f}x faster than Table Looping.")
+    print("="*70)
 
 if __name__ == "__main__":
     main()
