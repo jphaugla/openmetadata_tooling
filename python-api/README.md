@@ -1,6 +1,8 @@
 # Python API Directory
 
 This directory contains Python scripts for interacting with the OpenMetadata API. These scripts provide a robust way to automate catalog operations, migrate metadata, and manage ingestion pipelines.
+The openmetadata api documenation is [here](https://docs.open-metadata.org/v1.12.x/api-reference/main-concepts/metadata-standard/apis)
+The collate api documenation is [here](https://docs.getcollate.io/connectors/api)
 
 ## 📁 Directory Structure
 

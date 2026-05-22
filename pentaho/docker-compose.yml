@@ -1,0 +1,12 @@
+services:
+  pentaho-kettle:
+    image: andrespp/pdi:latest
+    container_name: pentaho_kettle
+    # Crucial for Mac M5 / OrbStack to emulate the Intel architecture
+    platform: linux/amd64
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      # Maps your local 'jobs' folder into the container
+      - ./jobs:/jobs
