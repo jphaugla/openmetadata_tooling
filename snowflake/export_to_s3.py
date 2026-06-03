@@ -11,14 +11,18 @@ import boto3
 from cryptography.hazmat.primitives import serialization
 
 # Snowflake connection details
-SNOWFLAKE_ACCOUNT = "FMFAHQK-GI58232"
-SNOWFLAKE_USER = "JASON"
+SNOWFLAKE_ACCOUNT = os.environ.get("SNOWFLAKE_ACCOUNT")
+SNOWFLAKE_USER = os.environ.get("SNOWFLAKE_USER")
+if not SNOWFLAKE_ACCOUNT or not SNOWFLAKE_USER:
+    raise RuntimeError("SNOWFLAKE_ACCOUNT and SNOWFLAKE_USER environment variables must be set.")
 SNOWFLAKE_WAREHOUSE = "DEMO_WH"
 SNOWFLAKE_DATABASE = "CUSTOMERS"
 SNOWFLAKE_SCHEMA = "COLLATE_SHOP"
 
 # S3 details
-S3_BUCKET = "collate-snowflake-interchange-118146679784"
+SNOWFLAKE_S3_BUCKET = os.environ.get("SNOWFLAKE_S3_BUCKET")
+if not SNOWFLAKE_S3_BUCKET:
+    raise RuntimeError("SNOWFLAKE_S3_BUCKET environment variable must be set.")
 
 # Tables to export: (source_table, s3_key, local_tmp)
 EXPORTS = [
@@ -29,7 +33,10 @@ EXPORTS = [
 ]
 
 # File path to the unencrypted private key
-PRIVATE_KEY_PATH = os.path.expanduser("~/.snowflake/snowflake_key_unencrypted.p8")
+PRIVATE_KEY_PATH = os.environ.get("SNOWFLAKE_PRIVATE_KEY_PATH")
+if not PRIVATE_KEY_PATH:
+    raise RuntimeError("SNOWFLAKE_PRIVATE_KEY_PATH environment variable must be set.")
+PRIVATE_KEY_PATH = os.path.expanduser(PRIVATE_KEY_PATH)
 
 def get_private_key_bytes(path):
     with open(path, "rb") as key_file:
@@ -52,9 +59,9 @@ def export_table(cur, s3, table_name, s3_key, local_path):
         writer.writerow(colnames)
         writer.writerows(rows)
 
-    print(f"   ☁️  Uploading to s3://{S3_BUCKET}/{s3_key}...")
-    s3.upload_file(local_path, S3_BUCKET, s3_key)
-    print(f"   ✅ Done: s3://{S3_BUCKET}/{s3_key}")
+    print(f"   ☁️  Uploading to s3://{SNOWFLAKE_S3_BUCKET}/{s3_key}...")
+    s3.upload_file(local_path, SNOWFLAKE_S3_BUCKET, s3_key)
+    print(f"   ✅ Done: s3://{SNOWFLAKE_S3_BUCKET}/{s3_key}")
 
     if os.path.exists(local_path):
         os.remove(local_path)

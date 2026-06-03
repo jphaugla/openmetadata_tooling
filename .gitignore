@@ -6,6 +6,8 @@ mcp/om-mcp-workspace/
 dbt/venv/
 snowflake/venv/
 python-api/venv/
+manage_llms/venv/
+mcp/venv/
 ingestionFramework/venv-collate/
 
 # Snowflake Keys

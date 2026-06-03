@@ -3,14 +3,19 @@ import os
 from cryptography.hazmat.primitives import serialization
 
 # Snowflake details found in the 'Enterprise' service config
-SNOWFLAKE_ACCOUNT = "FMFAHQK-GI58232"
-SNOWFLAKE_USER = "JASON"
+SNOWFLAKE_ACCOUNT = os.environ.get("SNOWFLAKE_ACCOUNT")
+SNOWFLAKE_USER = os.environ.get("SNOWFLAKE_USER")
+if not SNOWFLAKE_ACCOUNT or not SNOWFLAKE_USER:
+    raise RuntimeError("SNOWFLAKE_ACCOUNT and SNOWFLAKE_USER environment variables must be set.")
 SNOWFLAKE_WAREHOUSE = "DEMO_WH"
 SNOWFLAKE_DATABASE = "CUSTOMERS"
 SNOWFLAKE_SCHEMA = "COLLATE_SHOP"
 
 # File path to the unencrypted private key
-PRIVATE_KEY_PATH = os.path.expanduser("~/.snowflake/snowflake_key_unencrypted.p8")
+PRIVATE_KEY_PATH = os.environ.get("SNOWFLAKE_PRIVATE_KEY_PATH")
+if not PRIVATE_KEY_PATH:
+    raise RuntimeError("SNOWFLAKE_PRIVATE_KEY_PATH environment variable must be set.")
+PRIVATE_KEY_PATH = os.path.expanduser(PRIVATE_KEY_PATH)
 
 def get_private_key_bytes(path):
     with open(path, "rb") as key_file:

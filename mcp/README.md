@@ -91,15 +91,27 @@ The MCP server entry looks like this (auto-generated):
 
 ### Claude Desktop
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+#### Method 1: Official Collate PAT via `mcp-remote` (Recommended)
+This method follows the [official Collate documentation](https://docs.getcollate.io/collate-ai/mcp/claude#connect-with-personal-access-token-pat) using the `npx` bridge. We have provided a helper script to automatically generate the `claude_desktop_config.json` file using your current environment variables.
+
+Ensure that the required environment variables (`API_BASE` and `TOKEN`) are set in your terminal session, and then run the script to update your configuration:
+
+```bash
+# Ensure API_BASE and TOKEN are exported in your environment
+./switch_claude.sh
+```
+Restart Claude Desktop after running this command to apply the new configuration.
+
+#### Method 2: Python Bridge (`server.py`)
+Alternatively, if you prefer the local Python bridge, add this to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "openmetadata-mcp-bridge": {
-      "command": "/Users/jasonhaugland/gits/openmetadata_tooling/mcp/venv/bin/python3",
+      "command": "<path-to-your-repo>/mcp/venv/bin/python3",
       "args": [
-        "/Users/jasonhaugland/gits/openmetadata_tooling/mcp/server.py"
+        "<path-to-your-repo>/mcp/server.py"
       ],
       "env": {
         "TOKEN": "YOUR_TOKEN_HERE",
@@ -120,9 +132,9 @@ Add to `~/.gemini/settings.json`:
 {
   "mcpServers": {
     "openmetadata-mcp-bridge": {
-      "command": "/Users/jasonhaugland/gits/openmetadata_tooling/mcp/venv/bin/python3",
+      "command": "<path-to-your-repo>/mcp/venv/bin/python3",
       "args": [
-        "/Users/jasonhaugland/gits/openmetadata_tooling/mcp/server.py"
+        "<path-to-your-repo>/mcp/server.py"
       ],
       "env": {
         "TOKEN": "YOUR_TOKEN_HERE",

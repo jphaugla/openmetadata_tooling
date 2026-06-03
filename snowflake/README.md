@@ -4,13 +4,29 @@ This directory contains the core scripts to build and maintain the `COLLATE_SE` 
 
 ---
 
+## Prerequisites
+
+Before running any of the scripts in this directory, you **must** set the following environment variables. You can store these in a local, hidden script (e.g., `~/.snowflake/setEnv.sh`) and source it to keep them out of version control:
+
+```bash
+export SNOWFLAKE_ACCOUNT="your-account-identifier"
+export SNOWFLAKE_USER="your-username"
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.snowflake/snowflake_key_unencrypted.p8"
+export SNOWFLAKE_S3_BUCKET="your-s3-bucket-name"
+```
+
+The scripts will automatically verify that these are set and raise an error if they are missing.
+
+---
+
 ## Quick Start
 
 ```bash
 cd snowflake/
+source venv/bin/activate
 
 # 1. Export source data from COLLATE_SHOP to S3
-# This ensures s3://collate-snowflake-interchange-118146679784/ has fresh data
+# This ensures s3://$SNOWFLAKE_S3_BUCKET/ has fresh data
 python3 export_to_s3.py
 
 # 2. Drop and Rebuild COLLATE_SE (DDL only)

@@ -16,25 +16,25 @@ USE SCHEMA COLLATE_SE;
 
 -- RAW_CUSTOMERS
 COPY INTO RAW_CUSTOMERS
-FROM 's3://collate-snowflake-interchange-118146679784/customers/raw_customers_export.csv'
+FROM 's3://{SNOWFLAKE_S3_BUCKET}/customers/raw_customers_export.csv'
 FILE_FORMAT = (TYPE = 'CSV', SKIP_HEADER = 1, FIELD_OPTIONALLY_ENCLOSED_BY = '"')
 ON_ERROR = 'CONTINUE';
 
 -- RAW_ORDERS
 COPY INTO RAW_ORDERS
-FROM 's3://collate-snowflake-interchange-118146679784/orders/raw_orders_export.csv'
+FROM 's3://{SNOWFLAKE_S3_BUCKET}/orders/raw_orders_export.csv'
 FILE_FORMAT = (TYPE = 'CSV', SKIP_HEADER = 1, FIELD_OPTIONALLY_ENCLOSED_BY = '"')
 ON_ERROR = 'CONTINUE';
 
 -- RAW_ORDER_ITEMS
 COPY INTO RAW_ORDER_ITEMS
-FROM 's3://collate-snowflake-interchange-118146679784/order_items/raw_order_items_export.csv'
+FROM 's3://{SNOWFLAKE_S3_BUCKET}/order_items/raw_order_items_export.csv'
 FILE_FORMAT = (TYPE = 'CSV', SKIP_HEADER = 1, FIELD_OPTIONALLY_ENCLOSED_BY = '"')
 ON_ERROR = 'CONTINUE';
 
 -- RAW_PRODUCTS
 COPY INTO RAW_PRODUCTS
-FROM 's3://collate-snowflake-interchange-118146679784/products/raw_products_export.csv'
+FROM 's3://{SNOWFLAKE_S3_BUCKET}/products/raw_products_export.csv'
 FILE_FORMAT = (TYPE = 'CSV', SKIP_HEADER = 1, FIELD_OPTIONALLY_ENCLOSED_BY = '"')
 ON_ERROR = 'CONTINUE';
 

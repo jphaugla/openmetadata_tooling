@@ -5,9 +5,14 @@ import re
 import snowflake.connector
 from cryptography.hazmat.primitives import serialization
 
-SNOWFLAKE_ACCOUNT = "FMFAHQK-GI58232"
-SNOWFLAKE_USER = "JASON"
-PRIVATE_KEY_PATH = os.path.expanduser("~/.snowflake/snowflake_key_unencrypted.p8")
+SNOWFLAKE_ACCOUNT = os.environ.get("SNOWFLAKE_ACCOUNT")
+SNOWFLAKE_USER = os.environ.get("SNOWFLAKE_USER")
+if not SNOWFLAKE_ACCOUNT or not SNOWFLAKE_USER:
+    raise RuntimeError("SNOWFLAKE_ACCOUNT and SNOWFLAKE_USER environment variables must be set.")
+PRIVATE_KEY_PATH = os.environ.get("SNOWFLAKE_PRIVATE_KEY_PATH")
+if not PRIVATE_KEY_PATH:
+    raise RuntimeError("SNOWFLAKE_PRIVATE_KEY_PATH environment variable must be set.")
+PRIVATE_KEY_PATH = os.path.expanduser(PRIVATE_KEY_PATH)
 SQL_FILE = os.path.join(os.path.dirname(__file__), "import_and_transform.sql")
 
 def get_private_key_bytes(path):
@@ -39,9 +44,16 @@ def main():
         print("❌ Failed to get AWS credentials. Did you run 'aws sso login'?")
         return
 
+    SNOWFLAKE_S3_BUCKET = os.environ.get("SNOWFLAKE_S3_BUCKET")
+    if not SNOWFLAKE_S3_BUCKET:
+        print("❌ SNOWFLAKE_S3_BUCKET environment variable must be set.")
+        return
+
     print(f"📖 Reading SQL from: {SQL_FILE}")
     with open(SQL_FILE, "r") as f:
         sql_content = f.read()
+        
+    sql_content = sql_content.replace("{SNOWFLAKE_S3_BUCKET}", SNOWFLAKE_S3_BUCKET)
 
     # Split statements
     statements = [s.strip() for s in re.split(r';(?=(?:[^\']*\'[^\']*\')*[^\']*$)', sql_content) if s.strip()]
