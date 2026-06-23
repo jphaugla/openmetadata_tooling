@@ -50,7 +50,13 @@ def categorize_section(header):
     return 4
 
 def main():
-    url = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_URL
+    args = sys.argv[1:]
+    no_split = False
+    if "--no-split" in args:
+        no_split = True
+        args.remove("--no-split")
+        
+    url = args[0] if len(args) > 0 else DEFAULT_URL
     
     # Determine a prefix based on the URL to avoid overwriting files
     if "open-metadata" in url:
@@ -74,6 +80,25 @@ def main():
         content = response.read().decode('utf-8')
     except Exception as e:
         print(f"Failed to download the file: {e}")
+        return
+
+    if no_split:
+        base, ext = os.path.splitext(url)
+        name = base.replace("https://", "").replace("http://", "")
+        name = name.replace(".io", "").replace(".org", "").replace(".com", "")
+        name = name.replace(".", "_").replace("/", "_")
+        filename = f"{name}{ext}"
+        
+        file_path = os.path.join(output_dir, filename)
+        if os.path.exists(file_path):
+            with open(file_path, 'r+', encoding='utf-8') as f:
+                f.seek(0)
+                f.write(content)
+                f.truncate()
+        else:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+        print(f"Saved unsplit file to {filename}")
         return
 
     lines = content.split('\n')

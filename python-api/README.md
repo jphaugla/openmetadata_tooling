@@ -27,7 +27,8 @@ pip install -r requirements.txt
 ```
 
 ### Environment Variables
-All scripts require the following environment variables (set them via `source ~/.collate/setJson.sh` or manual export):
+
+**Core (all scripts):**
 
 | Variable | Required | Description |
 |---|---|---|
@@ -36,12 +37,37 @@ All scripts require the following environment variables (set them via `source ~/
 | `OWNER_ID` | Optional | UUID for the user who will own imported entities |
 | `JSON_DIR` | ✅ | Path to metadata storage folder (e.g., `../json/`) |
 
+**S3 export scripts (`export_audit_logs.py`, `export_events_to_s3.py`):**
+
+| Variable | Required | Description |
+|---|---|---|
+| `S3_BUCKET` | ✅ (unless `--dry-run`) | Destination S3 bucket |
+| `S3_KEY_PREFIX` | Optional | Folder prefix inside the bucket (default: `""`) |
+| `STATE_DIR` | Optional | Directory for the state file (default: `.`) |
+| `DRY_RUN` | Optional | Set to `true` to print output without writing to S3 |
+| `AUDIT_LOG_TOKEN` | ✅ (audit logs only) | Separate token with `AuditLogs` permission — the ingestion-bot does **not** have this by default. Grant it via Settings → Access Control → Roles. |
+
 ---
 
 ## 🛠️ Main Utility Scripts
 
 ### Core Client
 *   **`om_client.py`**: Shared base class that handles authentication, URL building, and common API methods.
+
+### User & Access Diagnostics
+| Script | Description |
+|---|---|
+| `get_user_detail.py <username_or_displayname>` | Fetches full user details (id, roles, teams, isAdmin, isBot) and resolves each role → policy → operations by ID to show the exact set of allowed operations. Falls back to displayName search if name lookup fails; exits with a duplicate list if multiple users share a displayName. Prints a `🟢/🔴 AuditLogs: GRANTED/NOT GRANTED` summary for quick bot permission validation. |
+| `list_roles.py` | Lists all defined roles with their IDs |
+| `list_users.py` | Lists all users with basic metadata |
+
+### S3 Data Export
+Incremental exporters that track state so each run picks up only new entries. State is saved to `state_<type>.txt` in `STATE_DIR` (default: current directory). Supports `--dry-run` to validate output without writing to S3.
+
+| Script | Description |
+|---|---|
+| `export_audit_logs.py` | Exports audit log entries from `/v1/audit/logs` to `s3://<S3_BUCKET>/<S3_KEY_PREFIX>audit_logs/audit_logs_<timestamp>.jsonl`. Requires `AUDIT_LOG_TOKEN` (separate from `TOKEN`) with the `AuditLogs` permission. Supports `--all`, `--start-date YYYY-MM-DD`, `--skip-state`, `--dry-run`. |
+| `export_events_to_s3.py` | Exports metadata change events from `/v1/events` (all entity types) to `s3://<S3_BUCKET>/<S3_KEY_PREFIX>change_events/events_<timestamp>.jsonl`. Uses timestamp-based pagination. Supports same flags as above. |
 
 ### Bulk Operations
 These scripts loop through your `$JSON_DIR` subdirectories to import metadata in mass.
@@ -75,11 +101,16 @@ These scripts loop through your `$JSON_DIR` subdirectories to import metadata in
 | Script | Description |
 |---|---|
 | `get_glossary.py <name>` | Exports a Glossary and its terms |
-| `import_glossary.py <file>` | Imports a Glossary (supports hierarchical terms) |
+| `import_glossary.py <file>` | Imports a Glossary from a JSON file exported by `get_glossary.py`. Creates the glossary (or resolves an existing one on 409) then imports all terms in dependency order (parents before children) using `fullyQualifiedName` depth sorting. Skips already-existing terms. Requires `OWNER_ID`. |
 | `get_service_glossary_maps.py` | Exports tag/glossary mappings for a service |
 | `apply_service_glossary_maps.py` | Re-applies mappings to entities on a target instance |
 | `export_lineage.py <service>` | Exports all lineage edges for a service |
 | `import_lineage.py <service>` | Re-creates lineage edges from a JSON export |
+
+### Maintenance & Cleanup
+| Script | Description |
+|---|---|
+| `clear_service_descriptions.py <service_name>` | Clears all table-level and column-level descriptions for every table in a service, resetting them to an empty string. Useful for demo resets or before re-running AI description generation. Accepts `--contains <substring>` to scope the wipe to matching table names only. Defaults to the `Enterprise_SE` service if no name is provided. |
 
 ---
 

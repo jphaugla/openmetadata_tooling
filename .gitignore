@@ -31,6 +31,10 @@ openmetadata_helm/deps.yaml
 # Logs and Temp files
 *.log
 
+# Export state files
+python-api/state_audit_logs.txt
+python-api/state_change_events.txt
+
 # Python cache files
 __pycache__/
 *.pyc

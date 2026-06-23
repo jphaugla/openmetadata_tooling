@@ -62,7 +62,7 @@ def main():
         print("ℹ️ Glossary already exists. Fetching existing definition...")
         encoded_gname = urllib.parse.quote(new_glossary_name)
         get_response = client._make_request("GET", f"/glossaries/name/{encoded_gname}")
-        if get_response and get_response.status_code == 200:
+        if get_response is not None and get_response.status_code == 200:
             new_glossary_id = get_response.json().get("id")
             
     if not new_glossary_id:
@@ -102,14 +102,22 @@ def main():
 
         print(f"  ➡️ Importing Term: {term_name}")
         term_response = client._make_request("POST", "/glossaryTerms", json=term_payload)
-        
-        if term_response and term_response.status_code in [200, 201]:
+        if term_response is not None and term_response.status_code in [200, 201]:
              print("    ✅ Success")
-        elif term_response and term_response.status_code == 409:
+        elif term_response is not None and (
+            term_response.status_code == 409 or 
+            (term_response.status_code == 400 and "already exists" in term_response.text)
+        ):
              print("    ℹ️ Already exists (skipping)")
         else:
-             err_msg = term_response.json().get("message", term_response.text) if term_response else "Unknown"
-             print(f"    ❌ Failed: {err_msg}")
+             status_code = term_response.status_code if term_response is not None else "N/A"
+             err_msg = "No Response"
+             if term_response is not None:
+                 try:
+                     err_msg = term_response.json().get("message", term_response.text)
+                 except Exception:
+                     err_msg = term_response.text
+             print(f"    ❌ Failed with status {status_code}: {err_msg}")
 
     print("✨ Glossary import process complete.")
 

@@ -4,6 +4,8 @@ import os
 import sys
 import json
 
+import argparse
+
 BASE_URL = os.environ.get("API_BASE")
 if not BASE_URL:
     print("❌ API_BASE environment variable not set. Run: source ~/.collate/setJson.sh")
@@ -76,14 +78,24 @@ def clear_column_descriptions(table):
         print(f"    ❌ Failed: {res.text}")
 
 def main():
-    service_name = sys.argv[1] if len(sys.argv) > 1 else SERVICE_FQN
-    tables = list_all_tables_in_service(service_name)
+    parser = argparse.ArgumentParser(description="Clear table and column descriptions in a service.")
+    parser.add_argument("service_name", nargs="?", default=SERVICE_FQN, help="Name of the service")
+    parser.add_argument("--contains", help="Only clear descriptions for tables whose name contains this substring (case-insensitive)")
+    args = parser.parse_args()
+
+    tables = list_all_tables_in_service(args.service_name)
     
     if not tables:
-        print(f"❌ No tables found for service {service_name}.")
+        print(f"❌ No tables found for service {args.service_name}.")
         return
 
-    print(f"📋 Found {len(tables)} tables. cleaning up...")
+    if args.contains:
+        tables = [t for t in tables if args.contains.lower() in t["name"].lower()]
+        if not tables:
+            print(f"❌ No tables found matching contains filter: '{args.contains}'.")
+            return
+
+    print(f"📋 Found {len(tables)} tables to clear. cleaning up...")
     
     for tbl in tables:
         clear_column_descriptions(tbl)

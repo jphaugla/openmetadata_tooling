@@ -35,7 +35,9 @@ class OpenMetadataClient:
             response = requests.request(method, url, headers=self.headers, **kwargs)
             return response
         except Exception as e:
+            import traceback
             print(f"❌ Request Error [{method} {url}]: {e}")
+            traceback.print_exc()
             return None
 
     def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
